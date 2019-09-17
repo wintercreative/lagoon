@@ -944,6 +944,10 @@ const typeDefs = gql`
 
   input BillingGroupInput {
     name: String!
+  }
+
+  input ProjectBillingGroupInput {
+    group: GroupInput!
     project: ProjectInput!
   }
 
@@ -1043,7 +1047,8 @@ const typeDefs = gql`
     addUserToGroup(input: UserGroupRoleInput!): Group
     removeUserFromGroup(input: UserGroupInput!): Group
     addGroupsToProject(input: ProjectGroupsInput): Project
-    addBillingGroupToProject(input: BillingGroupInput): Project
+    addBillingGroup(input: BillingGroupInput): Group
+    addProjectToBillingGroup(input: ProjectBillingGroupInput): Project
     removeGroupsFromProject(input: ProjectGroupsInput!): Project
   }
 

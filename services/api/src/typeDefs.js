@@ -499,6 +499,10 @@ const typeDefs = gql`
     Returns all Groups matching given filter (all if no filter defined)
     """
     allGroups(name: String): [Group]
+    """
+    Returns all projects in a given billing group
+    """
+    allProjectsInGroup(input: GroupInput): [Project]
   }
 
   # Must provide id OR name

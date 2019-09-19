@@ -500,9 +500,13 @@ const typeDefs = gql`
     """
     allGroups(name: String): [Group]
     """
-    Returns all projects in a given billing group
+    Returns all projects in a given group
     """
     allProjectsInGroup(input: GroupInput): [Project]
+    """
+    Returns all projects not in a billing group
+    """
+    allProjectsNotInBillingGroup: [Project]
   }
 
   # Must provide id OR name

@@ -10,6 +10,7 @@ export interface Group {
   name: string;
   id?: string;
   type?: string;
+  currency?: string;
   path?: string;
   parentGroupId?: string;
   // Only groups that aren't role subgroups.
@@ -89,10 +90,8 @@ const transformKeycloakGroups = async (
     (keycloakGroup: GroupRepresentation): Group => ({
       id: keycloakGroup.id,
       name: keycloakGroup.name,
-      type:
-        'type' in keycloakGroup.attributes
-          ? keycloakGroup.attributes.type[0]
-          : null,
+      type: String(R.pathOr(null, ['attributes', 'type'], keycloakGroup)),
+      currency: String(R.pathOr(null, ['attributes', 'currency'], keycloakGroup)),
       path: keycloakGroup.path,
       attributes: keycloakGroup.attributes,
       subGroups: keycloakGroup.subGroups,

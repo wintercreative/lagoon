@@ -9,6 +9,7 @@ import { User, transformKeycloakUsers } from './user';
 export interface Group {
   name: string;
   id?: string;
+  type?: string;
   path?: string;
   parentGroupId?: string;
   // Only groups that aren't role subgroups.
@@ -88,6 +89,10 @@ const transformKeycloakGroups = async (
     (keycloakGroup: GroupRepresentation): Group => ({
       id: keycloakGroup.id,
       name: keycloakGroup.name,
+      type:
+        'type' in keycloakGroup.attributes
+          ? keycloakGroup.attributes.type[0]
+          : null,
       path: keycloakGroup.path,
       attributes: keycloakGroup.attributes,
       subGroups: keycloakGroup.subGroups,

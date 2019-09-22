@@ -82,6 +82,9 @@ const attrLagoonProjectsLens = R.compose(
 
 export const isRoleSubgroup = R.pathEq(['attributes', 'type', 0], 'role-subgroup');
 
+const getKeyValueOrNullFromAttributes = (key:string, group:GroupRepresentation) =>
+  String(R.pathOr(null, ['attributes', key], group));
+
 const transformKeycloakGroups = async (
   keycloakGroups: GroupRepresentation[],
 ): Promise<Group[]> => {
@@ -90,8 +93,8 @@ const transformKeycloakGroups = async (
     (keycloakGroup: GroupRepresentation): Group => ({
       id: keycloakGroup.id,
       name: keycloakGroup.name,
-      type: String(R.pathOr(null, ['attributes', 'type'], keycloakGroup)),
-      currency: String(R.pathOr(null, ['attributes', 'currency'], keycloakGroup)),
+      type: getKeyValueOrNullFromAttributes('type', keycloakGroup),
+      currency: getKeyValueOrNullFromAttributes('currency', keycloakGroup),
       path: keycloakGroup.path,
       attributes: keycloakGroup.attributes,
       subGroups: keycloakGroup.subGroups,

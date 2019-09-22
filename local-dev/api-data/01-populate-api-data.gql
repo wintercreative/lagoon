@@ -13,26 +13,16 @@ mutation PopulateApi {
   }
 
   ### Groups
-  CredentialtestGroup1: addGroup(
-    input: {
-      name: "credentialtest-group1"
-    }
-  ) {
+  CredentialtestGroup1: addGroup(input: { name: "credentialtest-group1" }) {
     id
   }
-  CredentialtestGroup2: addGroup(
-    input: {
-      name: "credentialtest-group2"
-    }
-  ) {
+  CredentialtestGroup2: addGroup(input: { name: "credentialtest-group2" }) {
     id
   }
   CredentialtestGroup3: addGroup(
     input: {
       name: "credentialtest-group3"
-      parentGroup: {
-        name: "credentialtest-group2"
-      }
+      parentGroup: { name: "credentialtest-group2" }
     }
   ) {
     id
@@ -79,9 +69,7 @@ mutation PopulateApi {
       name: "credentialtestbothgroupaccess"
       keyValue: "AAAAB3NzaC1yc2EAAAADAQABAAABAQDHDRxmCLzLCLdo8M8hK+v5Zr5p4q0XQYwCm9xxWWU8ItkyP4LB90fyh8qWFJRQTYrGNe4usDL5kPyHXhUevdZt75jcjWqlWypbtNY4nFfi+HQ9dnR/f7RRkoBWbha3j8mqZdRHXo9xrXMc82wXaN9a9dMbvEmZPkTpi75g+C0KXBrfjJjDR6Lvr7zWoB2nPMmgy1UGLl5dKxJOg7vHYCpAI582knd0nep3t3bRdlxe7l/CxMthZmoJxz6dfoFotDyBjivVYqEiybtjkNBQnRf2xYQ7m6837hu3EkSVKdgbonWASFMenpuFacDE2S2dVftwW3QjzIOtdQERGZuMsi0p"
       keyType: SSH_RSA
-      user: {
-        email: "credentialtestbothgroupaccess_user@example.com"
-      }
+      user: { email: "credentialtestbothgroupaccess_user@example.com" }
     }
   ) {
     id
@@ -92,9 +80,7 @@ mutation PopulateApi {
       name: "credentialtestsubgroupaccess"
       keyValue: "AAAAB3NzaC1yc2EAAAADAQABAAABAQDSeDyxIwMWOjeAq7hF2qirbtoD33JZA2RxodsnnesrmWvrRlANn/fYZSR9zc8SMUMA6s6gR6eOLP+Nrz6bz9xIPFDhHpU7yJqWvb8EM2EPpgSppGmBIBDIPN+5YSxiX5fTuLn2dGHyIdgRvl1yXC09Pa16i/gweMIskP7nanFUfVcgUlTNm0nS6F+MzqklRRO7Tw1zOuleEnXohpzGpUJV5xgQmX4CoqiKYuyXssgBdwsrB9oYdGl8i7xi1w7Xlop6FhbaY/vQdy5f9xfoY2jiO7Big6FDeUGccpjL+xZ0MlKfiTl/OIHcsbshQZ1+D9eSmeaaQ8r9cujgTX2Y7umt"
       keyType: SSH_RSA
-      user: {
-        email: "credentialtestbothgroupaccess_user@example.com"
-      }
+      user: { email: "credentialtestbothgroupaccess_user@example.com" }
     }
   ) {
     id
@@ -105,9 +91,7 @@ mutation PopulateApi {
       name: "ci-customer-sshkey-rsa"
       keyValue: "AAAAB3NzaC1yc2EAAAADAQABAAACAQDEZlms5XsiyWjmnnUyhpt93VgHypse9Bl8kNkmZJTiM3Ex/wZAfwogzqd2LrTEiIOWSH1HnQazR+Cc9oHCmMyNxRrLkS/MEl0yZ38Q+GDfn37h/llCIZNVoHlSgYkqD0MQrhfGL5AulDUKIle93dA6qdCUlnZZjDPiR0vEXR36xGuX7QYAhK30aD2SrrBruTtFGvj87IP/0OEOvUZe8dcU9G/pCoqrTzgKqJRpqs/s5xtkqLkTIyR/SzzplO21A+pCKNax6csDDq3snS8zfx6iM8MwVfh8nvBW9seax1zBvZjHAPSTsjzmZXm4z32/ujAn/RhIkZw3ZgRKrxzryttGnWJJ8OFyF31JTJgwWWuPdH53G15PC83ZbmEgSV3win51RZRVppN4uQUuaqZWG9wwk2a6P5aen1RLCSLpTkd2mAEk9PlgmJrf8vITkiU9pF9n68ENCoo556qSdxW2pxnjrzKVPSqmqO1Xg5K4LOX4/9N4n4qkLEOiqnzzJClhFif3O28RW86RPxERGdPT81UI0oDAcU5euQr8Emz+Hd+PY1115UIld3CIHib5PYL9Ee0bFUKiWpR/acSe1fHB64mCoHP7hjFepGsq7inkvg2651wUDKBshGltpNkMj6+aZedNc0/rKYyjl80nT8g8QECgOSRzpmYp0zli2HpFoLOiWw=="
       keyType: SSH_RSA
-      user: {
-        email: "ci-customer-user-rsa@example.com"
-      }
+      user: { email: "ci-customer-user-rsa@example.com" }
     }
   ) {
     id
@@ -118,9 +102,7 @@ mutation PopulateApi {
       name: "ci-customer-sshkey-ed25519"
       keyValue: "AAAAC3NzaC1lZDI1NTE5AAAAIMdEs1h19jv2UrbtKcqPDatUxT9lPYcbGlEAbInsY8Ka"
       keyType: SSH_ED25519
-      user: {
-        email: "ci-customer-user-ed25519@example.com"
-      }
+      user: { email: "ci-customer-user-ed25519@example.com" }
     }
   ) {
     id
@@ -133,21 +115,15 @@ mutation PopulateApi {
       name: "credentialstest-project1"
       openshift: 1
       gitUrl: "ssh://git@192.168.99.1:2222/git/project1.git"
-      productionEnvironment:"master"
+      productionEnvironment: "master"
     }
   ) {
     id
   }
   CredentialstestProject1Group1: addGroupsToProject(
     input: {
-      project: {
-        name: "credentialstest-project1"
-      }
-      groups: [
-        {
-          name: "credentialtest-group1"
-        }
-      ]
+      project: { name: "credentialstest-project1" }
+      groups: [{ name: "credentialtest-group1" }]
     }
   ) {
     id
@@ -158,21 +134,15 @@ mutation PopulateApi {
       name: "credentialstest-project2"
       openshift: 1
       gitUrl: "ssh://git@192.168.99.1:2222/git/project2.git"
-      productionEnvironment:"master"
+      productionEnvironment: "master"
     }
   ) {
     id
   }
   CredentialstestProject2Group2: addGroupsToProject(
     input: {
-      project: {
-        name: "credentialstest-project2"
-      }
-      groups: [
-        {
-          name: "credentialtest-group2"
-        }
-      ]
+      project: { name: "credentialstest-project2" }
+      groups: [{ name: "credentialtest-group2" }]
     }
   ) {
     id
@@ -183,21 +153,15 @@ mutation PopulateApi {
       name: "credentialstest-project3"
       openshift: 1
       gitUrl: "ssh://git@192.168.99.1:2222/git/project2.git"
-      productionEnvironment:"master"
+      productionEnvironment: "master"
     }
   ) {
     id
   }
   CredentialstestProject3Group3: addGroupsToProject(
     input: {
-      project: {
-        name: "credentialstest-project3"
-      }
-      groups: [
-        {
-          name: "credentialtest-group3"
-        }
-      ]
+      project: { name: "credentialstest-project3" }
+      groups: [{ name: "credentialtest-group3" }]
     }
   ) {
     id
@@ -206,12 +170,8 @@ mutation PopulateApi {
   ## credentialtestbothgroupaccess_user: Access to group1 and group2
   CredentialtestCustomerAccessUserAdd1: addUserToGroup(
     input: {
-      user: {
-        email:"credentialtestbothgroupaccess_user@example.com"
-      }
-      group: {
-        name: "credentialtest-group1"
-      }
+      user: { email: "credentialtestbothgroupaccess_user@example.com" }
+      group: { name: "credentialtest-group1" }
       role: OWNER
     }
   ) {
@@ -219,12 +179,8 @@ mutation PopulateApi {
   }
   CredentialtestCustomerAccessUserAdd2: addUserToGroup(
     input: {
-      user: {
-        email:"credentialtestbothgroupaccess_user@example.com"
-      }
-      group: {
-        name: "credentialtest-group2"
-      }
+      user: { email: "credentialtestbothgroupaccess_user@example.com" }
+      group: { name: "credentialtest-group2" }
       role: OWNER
     }
   ) {
@@ -234,36 +190,23 @@ mutation PopulateApi {
   ## credentialtestsubgroupaccess_user: Access to group1 and group3
   CredentialtestSubgroupAccessUserAdd1: addUserToGroup(
     input: {
-      user: {
-        email:"credentialtestsubgroupaccess_user@example.com"
-      }
-      group: {
-        name: "credentialtest-group3"
-      }
+      user: { email: "credentialtestsubgroupaccess_user@example.com" }
+      group: { name: "credentialtest-group3" }
       role: OWNER
     }
   ) {
     name
   }
 
-
   #### Filling API with needed Objects for CI
   # Customer with a private key that has access to the local-git server
-  CiGroup: addGroup(
-    input: {
-      name: "ci-group"
-    }
-  ) {
+  CiGroup: addGroup(input: { name: "ci-group" }) {
     id
   }
   CiCustomerUserAddRsa: addUserToGroup(
     input: {
-      user: {
-        email:"ci-customer-user-rsa@example.com"
-      }
-      group: {
-        name: "ci-group"
-      }
+      user: { email: "ci-customer-user-rsa@example.com" }
+      group: { name: "ci-group" }
       role: OWNER
     }
   ) {
@@ -271,12 +214,8 @@ mutation PopulateApi {
   }
   CiCustomerUserAddEd25519: addUserToGroup(
     input: {
-      user: {
-        email:"ci-customer-user-ed25519@example.com"
-      }
-      group: {
-        name: "ci-group"
-      }
+      user: { email: "ci-customer-user-ed25519@example.com" }
+      group: { name: "ci-group" }
       role: OWNER
     }
   ) {
@@ -316,23 +255,14 @@ mutation PopulateApi {
       name: "ci-github"
       openshift: 2
       gitUrl: "ssh://git@192.168.99.1:2222/git/github.git"
-      productionEnvironment:"master"
+      productionEnvironment: "master"
       privateKey: "-----BEGIN RSA PRIVATE KEY-----\n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\n-----END RSA PRIVATE KEY-----"
     }
   ) {
     id
   }
   CiGithub1Group3: addGroupsToProject(
-    input: {
-      project: {
-        name: "ci-github"
-      }
-      groups: [
-        {
-          name: "ci-group"
-        }
-      ]
-    }
+    input: { project: { name: "ci-github" }, groups: [{ name: "ci-group" }] }
   ) {
     id
   }
@@ -365,23 +295,14 @@ mutation PopulateApi {
       name: "ci-gitlab"
       openshift: 2
       gitUrl: "ssh://git@192.168.99.1:2222/git/gitlab.git"
-      productionEnvironment:"master"
+      productionEnvironment: "master"
       privateKey: "-----BEGIN RSA PRIVATE KEY-----\nMIIJKAIBAAKCAgEAxGZZrOV7Islo5p51Moabfd1YB8qbHvQZfJDZJmSU4jNxMf8G\nQH8KIM6ndi60xIiDlkh9R50Gs0fgnPaBwpjMjcUay5EvzBJdMmd/EPhg359+4f5Z\nQiGTVaB5UoGJKg9DEK4Xxi+QLpQ1CiJXvd3QOqnQlJZ2WYwz4kdLxF0d+sRrl+0G\nAISt9Gg9kq6wa7k7RRr4/OyD/9DhDr1GXvHXFPRv6QqKq084CqiUaarP7OcbZKi5\nEyMkf0s86ZTttQPqQijWsenLAw6t7J0vM38eojPDMFX4fJ7wVvbHmsdcwb2YxwD0\nk7I85mV5uM99v7owJ/0YSJGcN2YESq8c68rbRp1iSfDhchd9SUyYMFlrj3R+dxte\nTwvN2W5hIEld8Ip+dUWUVaaTeLkFLmqmVhvcMJNmuj+Wnp9USwki6U5HdpgBJPT5\nYJia3/LyE5IlPaRfZ+vBDQqKOeeqkncVtqcZ468ylT0qpqjtV4OSuCzl+P/TeJ+K\npCxDoqp88yQpYRYn9ztvEVvOkT8RERnT0/NVCNKAwHFOXrkK/BJs/h3fj2NddeVC\nJXdwiB4m+T2C/RHtGxVColqUf2nEntXxweuJgqBz+4YxXqRrKu4p5L4NuudcFAyg\nbIRpbaTZDI+vmmXnTXNP6ymMo5fNJ0/IPEBAoDkkc6ZmKdM5Yth6RaCzolsCAwEA\nAQKCAgBRL4n0SaxcFevyISCLMU+HeP8RwXPcGMWMU4ggMcXFt8QcCbK46Ir0QtjA\nps/8yf2zGuYGu2dwps63s8KyAV3VYNwRuEOM1S6HTncdOb850YGuw+h7yMtRwxND\nwt5Db6mmdIDJYRH13zgJp2ajytRv25CoS4ZCwA0WhahRVLi214kudUFc53vNI2YI\ng4PUE+7nQx4X12E9V0ghQqabStdBB0ZXjA8Ef6vH5CXthDmNUX9mXcSbn5RPtndI\ni1Kz2Bl3HdCaHO3ZprDItbU0UWEFZeZSzcb5JO5u1HZwiebTA5/q638uqqg4CUyG\n0+bEYZ/Ud/AY13A/CkHN6ZNH+UQotCH3GLyaTQq6OhyXlgMBojn3xs9iMUclFcuy\nkbZ1jAxqci25pxCIeNDHBDKRyxgSkDPna8ZZ4eKGXjIZzsds4+IDkYJLMg0OCtd2\nKm+ZPM2CFU2YCqt11dlr0higGK/9gdpajJMVgEYAmigQ670LdcBc4XIOpPMrR70a\nPjbF9ze/UqtKDWtz8KMIUcvr0CjhHa3XRgMJiM34hIOZU6xf6rjEgkN2Geq24u1b\nhUW8URb+5dcasQ9iIfkNn3R+zK5PzyvQNf6+XrbVjpLqPHXJYrD85EKlXkPqiE6y\n3ehYMrIaZIY6gMuIVcg8AEtsm5EwQY7ETw4YnMQLKfyweLsHEQKCAQEA5vavDyQj\nn6PqfF1Ntr3N/FfwRr/167HB+/3wHT+FwRpCw62ACeBC0iFXmzG2wfQfot60fUGa\nQEJiUDGZFvBM0tiTpzmgGG7QpRbPe1919Sl5LZeLA9bngRnmqn5zAkmVTeBCO/4F\nMSk9hnBZ0v0W3DqNmjuIH298g3gl4VJeKpILd62LbhjvhjT/LXlekYDEj3p9Xob8\n1OQxFJgftFyg4P07RRaUzsNLhqEdY3VxDcUMb9459fEYeb7sYig+zVPaZQ31aMVK\nj6K+XiH5M5uKJWkPdMDUG84jreFAdBY9kGCuSulTWgmTLlMKSI85q5hkckY2EQQL\n5u456xfyuFcnEwKCAQEA2bCCcqcGIAiMwk/6z7XIJeUsSUg+ObvkEdogk5n6Y1Ea\nt5LxMpQzhG6SHJ2f38VyKgv9e/jnwXI8eiejper6OeQEBG4+AedcLYi0V5SUMIgD\nX4bxT9+qCwYrwt9YHkJySk237WZUWJPVfxHg0vqNYyD/CXBowx0nm8jEuZ8iT+CW\nO2uZq+0DO2WqoYT54lZux6aEzm+oAkzwJJVXJcUVPg7bJXK1ObOzvHpkZJxHL8+S\nKufzew/CXALKWHoCkEP/P8b7oxjcjQI3KK0EM2fABNvN28+qscqTqQjfAsNw24Ob\nP8rL8amgd/x7iddIbEpOSoLAH1gVoxJXA0oqkC6YmQKCAQEAiIeoomW1nUgTdCLf\nrrfyzUnaoqgVIpf42RKa319OnQD+GJg2iSAFwBuvovE3XN4H2YqW3Thri7LyVP+M\nxM+WSkl2tzLMXcUcF4staXvbyeoTVQ0xQzrFrT53aa/IIsEGvntkC/y0awQ6937w\nylWMLvF6BYNNi2+nBjx+//xl5/pfRwbS1mltJkOr2ODXM2IQT9STyc44JU0jak4m\n58Kd44IuiD+6BaPSwKn7KnEhPIeQO4z9bFJyKn3fVIL/5Pa9smEXAjEmS1Rj/ldM\n7eHzPvwlA9p9SFaKJt5x8G25ROCyB1x4RlBEreyutofcCoDSV+8DRPnEY2XN3RhS\nBgCW+wKCAQAyHrqaDSyS2YUXA/UaN59CYlZk9PYmssTa+16+vRfyH+1H0NQpsgd+\neTq4ze3ORpZ3adVN4svxNQ0JjvDVtZkxFPd70aoDJDKL5UqoU3QfDGHCb75FhpiO\n+ze+IVAXf3Ly+pvbU9Edp8PjAsnBqaA9743orXHhYmgJLRtmJWZv/6R3P9ncxLAW\nz9yOXaBu5TmSTBuNsBV9mhs8QQoUjyDJ7f+0yolBJMfAIGnW5EhbkK31pPvhHIrC\nRn4yCr1mW9F77KNpNMMq0BTFD7jE4SFLvRPThSem0Z5Xr8wwxbDJSa7H7DgyhryE\ng6Qp42AwVpdZ/mqfjNdGeWWBQ2UzVxcZAoIBAHNXgjD3umcKciYRAbltNJrXx9xk\ndAv8I69oEMCy4hCmvKUjy/UI9NqXFjBb/G6VGgh6NUE9o9o27t1Y5Plm0izyCA1M\nDFruaRfjyJ8qjbEifcqRtcF3rzsBiXIwdmbN6qT4PUipN2elpUAd7J1OIwGIIe3u\nCWNyOTNL+2+oQ/Eg1Y99mg3yrsVyOwhynVE80/X5cy07bXXR5rv1x4NKSVbPhlnt\nL6J5iAoqoDKICzjcgF5x3mj9YFWZrC3aRxRrN5RoEgeVdcXeK56UJqXHjmKN++m3\nc8OPEIBZiD8UJuhSNSOLiBFrGz6toy6rpHavqqknGhVWotXsAs1h8LNkBe8=\n-----END RSA PRIVATE KEY-----"
     }
   ) {
     id
   }
   CiGitlabGroup3: addGroupsToProject(
-    input: {
-      project: {
-        name: "ci-gitlab"
-      }
-      groups: [
-        {
-          name: "ci-group"
-        }
-      ]
-    }
+    input: { project: { name: "ci-gitlab" }, groups: [{ name: "ci-group" }] }
   ) {
     id
   }
@@ -401,23 +322,14 @@ mutation PopulateApi {
       name: "ci-bitbucket"
       openshift: 2
       gitUrl: "ssh://git@192.168.99.1:2222/git/bitbucket.git"
-      productionEnvironment:"master"
+      productionEnvironment: "master"
       privateKey: "-----BEGIN RSA PRIVATE KEY-----\n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\n-----END RSA PRIVATE KEY-----"
     }
   ) {
     id
   }
   CiBitbucketGroup3: addGroupsToProject(
-    input: {
-      project: {
-       name: "ci-bitbucket"
-      }
-      groups: [
-        {
-          name: "ci-group"
-        }
-      ]
-    }
+    input: { project: { name: "ci-bitbucket" }, groups: [{ name: "ci-group" }] }
   ) {
     id
   }
@@ -431,30 +343,20 @@ mutation PopulateApi {
     id
   }
 
-
   CiRest: addProject(
     input: {
       id: 6
       name: "ci-rest"
       openshift: 2
       gitUrl: "ssh://git@192.168.99.1:2222/git/rest.git"
-      productionEnvironment:"master"
+      productionEnvironment: "master"
       privateKey: "-----BEGIN RSA PRIVATE KEY-----\n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\n-----END RSA PRIVATE KEY-----"
     }
   ) {
     id
   }
   CiRestGroup3: addGroupsToProject(
-    input: {
-      project: {
-        name: "ci-rest"
-      }
-      groups: [
-        {
-          name: "ci-group"
-        }
-      ]
-    }
+    input: { project: { name: "ci-rest" }, groups: [{ name: "ci-group" }] }
   ) {
     id
   }
@@ -474,23 +376,14 @@ mutation PopulateApi {
       name: "ci-node"
       openshift: 2
       gitUrl: "ssh://git@192.168.99.1:2222/git/node.git"
-      productionEnvironment:"master"
+      productionEnvironment: "master"
       privateKey: "-----BEGIN RSA PRIVATE KEY-----\n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\n-----END RSA PRIVATE KEY-----"
     }
   ) {
     id
   }
   CiNodeGroup3: addGroupsToProject(
-    input: {
-      project: {
-        name: "ci-node"
-      }
-      groups: [
-        {
-          name: "ci-group"
-        }
-      ]
-    }
+    input: { project: { name: "ci-node" }, groups: [{ name: "ci-group" }] }
   ) {
     id
   }
@@ -510,7 +403,7 @@ mutation PopulateApi {
       name: "ci-multiproject1"
       openshift: 2
       gitUrl: "ssh://git@192.168.99.1:2222/git/multiproject.git"
-      productionEnvironment:"master"
+      productionEnvironment: "master"
       privateKey: "-----BEGIN RSA PRIVATE KEY-----\n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\n-----END RSA PRIVATE KEY-----"
     }
   ) {
@@ -518,14 +411,8 @@ mutation PopulateApi {
   }
   CiMultiproject1Group3: addGroupsToProject(
     input: {
-      project: {
-        name: "ci-multiproject1"
-      }
-      groups: [
-        {
-          name: "ci-group"
-        }
-      ]
+      project: { name: "ci-multiproject1" }
+      groups: [{ name: "ci-group" }]
     }
   ) {
     id
@@ -546,7 +433,7 @@ mutation PopulateApi {
       name: "ci-multiproject2"
       openshift: 2
       gitUrl: "ssh://git@192.168.99.1:2222/git/multiproject.git"
-      productionEnvironment:"master"
+      productionEnvironment: "master"
       privateKey: "-----BEGIN RSA PRIVATE KEY-----\nMIIJKAIBAAKCAgEAxGZZrOV7Islo5p51Moabfd1YB8qbHvQZfJDZJmSU4jNxMf8G\nQH8KIM6ndi60xIiDlkh9R50Gs0fgnPaBwpjMjcUay5EvzBJdMmd/EPhg359+4f5Z\nQiGTVaB5UoGJKg9DEK4Xxi+QLpQ1CiJXvd3QOqnQlJZ2WYwz4kdLxF0d+sRrl+0G\nAISt9Gg9kq6wa7k7RRr4/OyD/9DhDr1GXvHXFPRv6QqKq084CqiUaarP7OcbZKi5\nEyMkf0s86ZTttQPqQijWsenLAw6t7J0vM38eojPDMFX4fJ7wVvbHmsdcwb2YxwD0\nk7I85mV5uM99v7owJ/0YSJGcN2YESq8c68rbRp1iSfDhchd9SUyYMFlrj3R+dxte\nTwvN2W5hIEld8Ip+dUWUVaaTeLkFLmqmVhvcMJNmuj+Wnp9USwki6U5HdpgBJPT5\nYJia3/LyE5IlPaRfZ+vBDQqKOeeqkncVtqcZ468ylT0qpqjtV4OSuCzl+P/TeJ+K\npCxDoqp88yQpYRYn9ztvEVvOkT8RERnT0/NVCNKAwHFOXrkK/BJs/h3fj2NddeVC\nJXdwiB4m+T2C/RHtGxVColqUf2nEntXxweuJgqBz+4YxXqRrKu4p5L4NuudcFAyg\nbIRpbaTZDI+vmmXnTXNP6ymMo5fNJ0/IPEBAoDkkc6ZmKdM5Yth6RaCzolsCAwEA\nAQKCAgBRL4n0SaxcFevyISCLMU+HeP8RwXPcGMWMU4ggMcXFt8QcCbK46Ir0QtjA\nps/8yf2zGuYGu2dwps63s8KyAV3VYNwRuEOM1S6HTncdOb850YGuw+h7yMtRwxND\nwt5Db6mmdIDJYRH13zgJp2ajytRv25CoS4ZCwA0WhahRVLi214kudUFc53vNI2YI\ng4PUE+7nQx4X12E9V0ghQqabStdBB0ZXjA8Ef6vH5CXthDmNUX9mXcSbn5RPtndI\ni1Kz2Bl3HdCaHO3ZprDItbU0UWEFZeZSzcb5JO5u1HZwiebTA5/q638uqqg4CUyG\n0+bEYZ/Ud/AY13A/CkHN6ZNH+UQotCH3GLyaTQq6OhyXlgMBojn3xs9iMUclFcuy\nkbZ1jAxqci25pxCIeNDHBDKRyxgSkDPna8ZZ4eKGXjIZzsds4+IDkYJLMg0OCtd2\nKm+ZPM2CFU2YCqt11dlr0higGK/9gdpajJMVgEYAmigQ670LdcBc4XIOpPMrR70a\nPjbF9ze/UqtKDWtz8KMIUcvr0CjhHa3XRgMJiM34hIOZU6xf6rjEgkN2Geq24u1b\nhUW8URb+5dcasQ9iIfkNn3R+zK5PzyvQNf6+XrbVjpLqPHXJYrD85EKlXkPqiE6y\n3ehYMrIaZIY6gMuIVcg8AEtsm5EwQY7ETw4YnMQLKfyweLsHEQKCAQEA5vavDyQj\nn6PqfF1Ntr3N/FfwRr/167HB+/3wHT+FwRpCw62ACeBC0iFXmzG2wfQfot60fUGa\nQEJiUDGZFvBM0tiTpzmgGG7QpRbPe1919Sl5LZeLA9bngRnmqn5zAkmVTeBCO/4F\nMSk9hnBZ0v0W3DqNmjuIH298g3gl4VJeKpILd62LbhjvhjT/LXlekYDEj3p9Xob8\n1OQxFJgftFyg4P07RRaUzsNLhqEdY3VxDcUMb9459fEYeb7sYig+zVPaZQ31aMVK\nj6K+XiH5M5uKJWkPdMDUG84jreFAdBY9kGCuSulTWgmTLlMKSI85q5hkckY2EQQL\n5u456xfyuFcnEwKCAQEA2bCCcqcGIAiMwk/6z7XIJeUsSUg+ObvkEdogk5n6Y1Ea\nt5LxMpQzhG6SHJ2f38VyKgv9e/jnwXI8eiejper6OeQEBG4+AedcLYi0V5SUMIgD\nX4bxT9+qCwYrwt9YHkJySk237WZUWJPVfxHg0vqNYyD/CXBowx0nm8jEuZ8iT+CW\nO2uZq+0DO2WqoYT54lZux6aEzm+oAkzwJJVXJcUVPg7bJXK1ObOzvHpkZJxHL8+S\nKufzew/CXALKWHoCkEP/P8b7oxjcjQI3KK0EM2fABNvN28+qscqTqQjfAsNw24Ob\nP8rL8amgd/x7iddIbEpOSoLAH1gVoxJXA0oqkC6YmQKCAQEAiIeoomW1nUgTdCLf\nrrfyzUnaoqgVIpf42RKa319OnQD+GJg2iSAFwBuvovE3XN4H2YqW3Thri7LyVP+M\nxM+WSkl2tzLMXcUcF4staXvbyeoTVQ0xQzrFrT53aa/IIsEGvntkC/y0awQ6937w\nylWMLvF6BYNNi2+nBjx+//xl5/pfRwbS1mltJkOr2ODXM2IQT9STyc44JU0jak4m\n58Kd44IuiD+6BaPSwKn7KnEhPIeQO4z9bFJyKn3fVIL/5Pa9smEXAjEmS1Rj/ldM\n7eHzPvwlA9p9SFaKJt5x8G25ROCyB1x4RlBEreyutofcCoDSV+8DRPnEY2XN3RhS\nBgCW+wKCAQAyHrqaDSyS2YUXA/UaN59CYlZk9PYmssTa+16+vRfyH+1H0NQpsgd+\neTq4ze3ORpZ3adVN4svxNQ0JjvDVtZkxFPd70aoDJDKL5UqoU3QfDGHCb75FhpiO\n+ze+IVAXf3Ly+pvbU9Edp8PjAsnBqaA9743orXHhYmgJLRtmJWZv/6R3P9ncxLAW\nz9yOXaBu5TmSTBuNsBV9mhs8QQoUjyDJ7f+0yolBJMfAIGnW5EhbkK31pPvhHIrC\nRn4yCr1mW9F77KNpNMMq0BTFD7jE4SFLvRPThSem0Z5Xr8wwxbDJSa7H7DgyhryE\ng6Qp42AwVpdZ/mqfjNdGeWWBQ2UzVxcZAoIBAHNXgjD3umcKciYRAbltNJrXx9xk\ndAv8I69oEMCy4hCmvKUjy/UI9NqXFjBb/G6VGgh6NUE9o9o27t1Y5Plm0izyCA1M\nDFruaRfjyJ8qjbEifcqRtcF3rzsBiXIwdmbN6qT4PUipN2elpUAd7J1OIwGIIe3u\nCWNyOTNL+2+oQ/Eg1Y99mg3yrsVyOwhynVE80/X5cy07bXXR5rv1x4NKSVbPhlnt\nL6J5iAoqoDKICzjcgF5x3mj9YFWZrC3aRxRrN5RoEgeVdcXeK56UJqXHjmKN++m3\nc8OPEIBZiD8UJuhSNSOLiBFrGz6toy6rpHavqqknGhVWotXsAs1h8LNkBe8=\n-----END RSA PRIVATE KEY-----"
     }
   ) {
@@ -554,14 +441,8 @@ mutation PopulateApi {
   }
   CiMultiproject2Group3: addGroupsToProject(
     input: {
-      project: {
-        name: "ci-multiproject2"
-      }
-      groups: [
-        {
-          name: "ci-group"
-        }
-      ]
+      project: { name: "ci-multiproject2" }
+      groups: [{ name: "ci-group" }]
     }
   ) {
     id
@@ -583,23 +464,14 @@ mutation PopulateApi {
       openshift: 2
       developmentEnvironmentsLimit: 10
       gitUrl: "ssh://git@192.168.99.1:2222/git/drupal.git"
-      productionEnvironment:"master"
+      productionEnvironment: "master"
       privateKey: "-----BEGIN RSA PRIVATE KEY-----\n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\n-----END RSA PRIVATE KEY-----"
     }
   ) {
     id
   }
   CiDrupalGroup3: addGroupsToProject(
-    input: {
-      project: {
-        name: "ci-drupal"
-      }
-      groups: [
-        {
-          name: "ci-group"
-        }
-      ]
-    }
+    input: { project: { name: "ci-drupal" }, groups: [{ name: "ci-group" }] }
   ) {
     id
   }
@@ -619,23 +491,14 @@ mutation PopulateApi {
       name: "ci-nginx"
       openshift: 2
       gitUrl: "ssh://git@192.168.99.1:2222/git/nginx.git"
-      productionEnvironment:"master"
+      productionEnvironment: "master"
       privateKey: "-----BEGIN RSA PRIVATE KEY-----\n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\n-----END RSA PRIVATE KEY-----"
     }
   ) {
     id
   }
   CiNginxGroup3: addGroupsToProject(
-    input: {
-      project: {
-        name: "ci-nginx"
-      }
-      groups: [
-        {
-          name: "ci-group"
-        }
-      ]
-    }
+    input: { project: { name: "ci-nginx" }, groups: [{ name: "ci-group" }] }
   ) {
     id
   }
@@ -662,16 +525,7 @@ mutation PopulateApi {
     id
   }
   CiFeaturesGroup3: addGroupsToProject(
-    input: {
-      project: {
-        name: "ci-features"
-      }
-      groups: [
-        {
-          name: "ci-group"
-        }
-      ]
-    }
+    input: { project: { name: "ci-features" }, groups: [{ name: "ci-group" }] }
   ) {
     id
   }
@@ -715,7 +569,7 @@ mutation PopulateApi {
     input: {
       type: ENVIRONMENT
       typeId: 2
-      name:"LAGOON_API_VARIABLE_ENVIRONMENT"
+      name: "LAGOON_API_VARIABLE_ENVIRONMENT"
       value: "EA2AFAE09B"
     }
   ) {
@@ -784,14 +638,8 @@ mutation PopulateApi {
 
   CiFeaturesSubfolderGroup3: addGroupsToProject(
     input: {
-      project: {
-        name: "ci-features-subfolder"
-      }
-      groups: [
-        {
-          name: "ci-group"
-        }
-      ]
+      project: { name: "ci-features-subfolder" }
+      groups: [{ name: "ci-group" }]
     }
   ) {
     id
@@ -821,14 +669,8 @@ mutation PopulateApi {
   }
   CiElasticsearchGroup3: addGroupsToProject(
     input: {
-      project: {
-        name: "ci-elasticsearch"
-      }
-      groups: [
-        {
-          name: "ci-group"
-        }
-      ]
+      project: { name: "ci-elasticsearch" }
+      groups: [{ name: "ci-group" }]
     }
   ) {
     id
@@ -849,7 +691,7 @@ mutation PopulateApi {
       name: "ci-drupal-galera"
       openshift: 2
       gitUrl: "ssh://git@192.168.99.1:2222/git/drupal-galera.git"
-      productionEnvironment:"master"
+      productionEnvironment: "master"
       privateKey: "-----BEGIN RSA PRIVATE KEY-----\n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\n-----END RSA PRIVATE KEY-----"
     }
   ) {
@@ -857,14 +699,8 @@ mutation PopulateApi {
   }
   CiDrupalGaleraGroup3: addGroupsToProject(
     input: {
-      project: {
-        name: "ci-drupal-galera"
-      }
-      groups: [
-        {
-          name: "ci-group"
-        }
-      ]
+      project: { name: "ci-drupal-galera" }
+      groups: [{ name: "ci-group" }]
     }
   ) {
     id
@@ -885,7 +721,7 @@ mutation PopulateApi {
       name: "ci-drupal-postgres"
       openshift: 2
       gitUrl: "ssh://git@192.168.99.1:2222/git/drupal-postgres.git"
-      productionEnvironment:"master"
+      productionEnvironment: "master"
       privateKey: "-----BEGIN RSA PRIVATE KEY-----\n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\n-----END RSA PRIVATE KEY-----"
     }
   ) {
@@ -893,14 +729,8 @@ mutation PopulateApi {
   }
   CiDrupalPostgresGroup3: addGroupsToProject(
     input: {
-      project: {
-        name: "ci-drupal-postgres"
-      }
-      groups: [
-        {
-          name: "ci-group"
-        }
-      ]
+      project: { name: "ci-drupal-postgres" }
+      groups: [{ name: "ci-group" }]
     }
   ) {
     id
@@ -921,23 +751,14 @@ mutation PopulateApi {
       name: "ci-solr"
       openshift: 2
       gitUrl: "ssh://git@192.168.99.1:2222/git/solr.git"
-      productionEnvironment:"master"
+      productionEnvironment: "master"
       privateKey: "-----BEGIN RSA PRIVATE KEY-----\n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\n-----END RSA PRIVATE KEY-----"
     }
   ) {
     id
   }
   CiSolrGroup3: addGroupsToProject(
-    input: {
-      project: {
-        name: "ci-solr"
-      }
-      groups: [
-        {
-          name: "ci-group"
-        }
-      ]
-    }
+    input: { project: { name: "ci-solr" }, groups: [{ name: "ci-group" }] }
   ) {
     id
   }
@@ -964,16 +785,7 @@ mutation PopulateApi {
     id
   }
   CiApiGroup3: addGroupsToProject(
-    input: {
-      project: {
-        name: "ci-api"
-      }
-      groups: [
-        {
-          name: "ci-group"
-        }
-      ]
-    }
+    input: { project: { name: "ci-api" }, groups: [{ name: "ci-group" }] }
   ) {
     id
   }
@@ -987,14 +799,9 @@ mutation PopulateApi {
     id
   }
 
-
   #### Lagoon Kickstart Objects
   # Customer with a private key that has access to the local-git server.
-  KickstartGroup: addGroup(
-    input: {
-      name: "kickstart-group"
-    }
-  ) {
+  KickstartGroup: addGroup(input: { name: "kickstart-group" }) {
     id
   }
   KickstartRocketChat: addNotificationRocketChat(
@@ -1023,21 +830,15 @@ mutation PopulateApi {
       openshift: 3
       gitUrl: "git@github.com:amazeeio/lagoon.git"
       openshiftProjectPattern: "lagoon"
-      productionEnvironment:"master"
+      productionEnvironment: "master"
     }
   ) {
     id
   }
   KickstartProjectGroup4: addGroupsToProject(
     input: {
-      project: {
-        name: "lagoon"
-      }
-      groups: [
-        {
-          name: "kickstart-group"
-        }
-      ]
+      project: { name: "lagoon" }
+      groups: [{ name: "kickstart-group" }]
     }
   ) {
     id
@@ -1062,15 +863,14 @@ mutation PopulateApi {
   ) {
     id
   }
-  UICustomer1: addGroup(
-    input: { name: "ui-customer" }
-  ) {
+  UICustomer1: addGroup(input: { name: "ui-customer" }) {
     id
   }
   UIProject1: addProject(
     input: {
       id: 18
       name: "high-cotton"
+      availability: HIGH
       openshift: 4
       gitUrl: "test"
       productionEnvironment: "Master"
@@ -1078,16 +878,23 @@ mutation PopulateApi {
   ) {
     id
   }
+  UIBillingGroup1: addBillingGroup(
+    input: { name: "High Cotton Billing Group", currency: USD }
+  ) {
+    id
+  }
+  UIProject1BillingGroup1: addProjectToBillingGroup(
+    input: {
+      project: { name: "high-cotton" }
+      group: { name: "High Cotton Billing Group" }
+    }
+  ) {
+    id
+  }
   UIProject1Group5: addGroupsToProject(
     input: {
-      project: {
-        name: "high-cotton"
-      }
-      groups: [
-        {
-          name: "ui-customer"
-        }
-      ]
+      project: { name: "high-cotton" }
+      groups: [{ name: "ui-customer" }]
     }
   ) {
     id
@@ -1255,7 +1062,6 @@ mutation PopulateApi {
     id
   }
 
-
   UIProject1Environment1addTask3: addTask(
     input: {
       name: "Drupal Archive"
@@ -1272,7 +1078,9 @@ mutation PopulateApi {
     id
   }
 
-  UIProject1Environment1addServices: setEnvironmentServices(input:{environment:3, services:["cli", "nginx", "mariadb"]}) {
+  UIProject1Environment1addServices: setEnvironmentServices(
+    input: { environment: 3, services: ["cli", "nginx", "mariadb"] }
+  ) {
     id
   }
 
@@ -1366,16 +1174,7 @@ mutation PopulateApi {
   }
 
   CILimitGroup3: addGroupsToProject(
-    input: {
-      project: {
-        name: "ci-env-limit"
-      }
-      groups: [
-        {
-          name: "ci-group"
-        }
-      ]
-    }
+    input: { project: { name: "ci-env-limit" }, groups: [{ name: "ci-group" }] }
   ) {
     id
   }

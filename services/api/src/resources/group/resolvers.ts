@@ -5,6 +5,7 @@ import { isPatchEmpty } from '../../util/db';
 import { GroupNotFoundError } from '../../models/group';
 import * as projectHelpers from '../project/helpers';
 import { OpendistroSecurityOperations } from './opendistroSecurity';
+import { getEnvironmentsByProjectId } from '../environment/resolvers';
 
 export const getAllGroups = async (
   root,
@@ -75,10 +76,10 @@ export const getGroupsByUserId = async (
   _input,
   { hasPermission, dataSources, keycloakGrant },
 ) => {
-  const queryUser = await dataSources.UserModel.loadUserById(
-    uid,
+  const queryUser = await dataSources.UserModel.loadUserById(uid);
+  const queryUserGroups = await dataSources.UserModel.getAllGroupsForUser(
+    queryUser,
   );
-  const queryUserGroups = await dataSources.UserModel.getAllGroupsForUser(queryUser);
 
   try {
     await hasPermission('group', 'viewAll');
@@ -93,14 +94,20 @@ export const getGroupsByUserId = async (
     const currentUser = await dataSources.UserModel.loadUserById(
       keycloakGrant.access_token.content.sub,
     );
-    const currentUserGroups = await dataSources.UserModel.getAllGroupsForUser(currentUser);
+    const currentUserGroups = await dataSources.UserModel.getAllGroupsForUser(
+      currentUser,
+    );
     const bothUserGroups = R.intersection(queryUserGroups, currentUserGroups);
 
     return bothUserGroups;
   }
 };
 
-export const addGroup = async (_root, { input }, { dataSources, sqlClient, hasPermission }) => {
+export const addGroup = async (
+  _root,
+  { input },
+  { dataSources, sqlClient, hasPermission },
+) => {
   await hasPermission('group', 'add');
 
   if (validator.matches(input.name, /[^0-9a-z-]/)) {
@@ -115,10 +122,11 @@ export const addGroup = async (_root, { input }, { dataSources, sqlClient, hasPe
       throw new Error('You must provide a group id or name');
     }
 
-    const parentGroup = await dataSources.GroupModel.loadGroupByIdOrName(input.parentGroup);
+    const parentGroup = await dataSources.GroupModel.loadGroupByIdOrName(
+      input.parentGroup,
+    );
     parentGroupId = parentGroup.id;
   }
-
 
   const group = await dataSources.GroupModel.addGroup({
     name: input.name,
@@ -126,7 +134,10 @@ export const addGroup = async (_root, { input }, { dataSources, sqlClient, hasPe
   });
 
   // We don't have any projects yet. So just an empty string
-  await OpendistroSecurityOperations(sqlClient, dataSources.GroupModel).syncGroup(input.name, '')
+  await OpendistroSecurityOperations(
+    sqlClient,
+    dataSources.GroupModel,
+  ).syncGroup(input.name, '');
 
   return group;
 };
@@ -175,7 +186,10 @@ export const deleteGroup = async (
 
   await dataSources.GroupModel.deleteGroup(group.id);
 
-  await OpendistroSecurityOperations(sqlClient, dataSources.GroupModel).deleteGroup(group.name)
+  await OpendistroSecurityOperations(
+    sqlClient,
+    dataSources.GroupModel,
+  ).deleteGroup(group.name);
 
   return 'success';
 };
@@ -299,17 +313,26 @@ export const addGroupsToProject = async (
     await dataSources.GroupModel.addProjectToGroup(project.id, group);
   }
 
-  const syncGroups = groupsInput.map(async (groupInput) => {
-    const updatedGroup = await dataSources.GroupModel.loadGroupByIdOrName(groupInput);
-    const projectIdsArray = await dataSources.GroupModel.getProjectsFromGroupAndSubgroups(updatedGroup)
-    const projectIds = R.join(',')(projectIdsArray)
-    OpendistroSecurityOperations(sqlClient, dataSources.GroupModel).syncGroup(updatedGroup.name, projectIds);
+  const syncGroups = groupsInput.map(async groupInput => {
+    const updatedGroup = await dataSources.GroupModel.loadGroupByIdOrName(
+      groupInput,
+    );
+    const projectIdsArray = await dataSources.GroupModel.getProjectsFromGroupAndSubgroups(
+      updatedGroup,
+    );
+    const projectIds = R.join(',')(projectIdsArray);
+    OpendistroSecurityOperations(sqlClient, dataSources.GroupModel).syncGroup(
+      updatedGroup.name,
+      projectIds,
+    );
   });
 
   try {
     await Promise.all(syncGroups);
   } catch (err) {
-    throw new Error(`Could not sync groups with opendistro-security: ${err.message}`);
+    throw new Error(
+      `Could not sync groups with opendistro-security: ${err.message}`,
+    );
   }
 
   return await projectHelpers(sqlClient).getProjectById(project.id);
@@ -330,7 +353,10 @@ export const addBillingGroup = async (
     throw new Error('You must provide a Currency for the Billing Group');
   }
 
-  const gData = { name, attributes: { type: ['billing'], currency: [currency] } };
+  const gData = {
+    name,
+    attributes: { type: ['billing'], currency: [currency] },
+  };
   return dataSources.GroupModel.addGroup(gData);
 };
 
@@ -351,12 +377,14 @@ export const addProjectToBillingGroup = async (
     throw new Error('You must provide a billing group name or id');
   }
 
-  const { loadGroupsByProjectId, loadGroupByIdOrName, addProjectToGroup } = dataSources.GroupModel;
+  const {
+    loadGroupsByProjectId,
+    loadGroupByIdOrName,
+    addProjectToGroup,
+  } = dataSources.GroupModel;
 
   // Billing groups for this project
-  const projectGroups = await loadGroupsByProjectId(
-    project.id,
-  );
+  const projectGroups = await loadGroupsByProjectId(project.id);
 
   const projectBillingGroups = projectGroups.filter(group => {
     const { attributes } = group;
@@ -394,6 +422,82 @@ export const getAllProjectsInGroup = async (
   );
 };
 
+type Project = {
+  id: number;
+  name: string;
+  giturl: string;
+  subfolder: string;
+  activesystemsdeploy: string;
+  activesystemsremove: string;
+  branches: string;
+  productionenvironment: string;
+  autoidle: number;
+  storagecalc: number;
+  pullrequests: string;
+  openshift: number;
+  openshiftprojectpattern: string;
+};
+
+export const getBillingGroupCost = async (root, args, context) => {
+  const projects = await Promise.all(
+    await getAllProjectsInGroup(root, args, context),
+  );
+  const getEnvsFromPid = async id => Promise.all(await getEnvironmentsByProjectId({ id }, args, context));
+  const projectMapFn = async project => ({
+    ...project,
+    environments: await Promise.all(await getEnvsFromPid(project.id)),
+  });
+
+  const projectsWithEnvironments = projects.map(projectMapFn);
+  console.log(await Promise.all(projectsWithEnvironments));
+
+  const availabilityFilterFn = (filterKey: string) => ({ availability }) =>
+    availability === filterKey;
+  const highAvailabilityProjectsInGroup = projects.filter(
+    availabilityFilterFn('HIGH'),
+  );
+  const standardAvailabilityProjectsInGroup = projects.filter(
+    availabilityFilterFn('STANDARD'),
+  );
+
+  // TODO - Get all environments for the project
+  // getEnvironmentsByProjectId
+
+  // TODO - for each environment loop through and call
+  // getEnvironmentStorageMonthByEnvironmentId
+  // getEnvironmentHoursMonthByEnvironmentId
+  // getEnvironmentHitsMonthByEnvironmentId
+  // services/api/src/resources/environment/resolvers.js
+
+  const projectCostFn = project => ({
+    id: project.id,
+    name: project.name,
+    hits: 1000,
+    storage: 1000,
+    hours: {
+      prod: 10,
+      dev: 20,
+    },
+  });
+
+  return {
+    availability: {
+      high: {
+        hitCost: 1_000_000,
+        storageCost: 1_000_000,
+        hoursCost: 1_000_000,
+        projects: [highAvailabilityProjectsInGroup.map(projectCostFn)],
+      },
+      standard: {
+        hitCost: 1_000_000,
+        storageCost: 1_000_000,
+        hoursCost: 1_000_000,
+        projects: [standardAvailabilityProjectsInGroup.map(projectCostFn)],
+      },
+    },
+  };
+};
+
 export const removeGroupsFromProject = async (
   _root,
   { input: { project: projectInput, groups: groupsInput } },
@@ -422,18 +526,27 @@ export const removeGroupsFromProject = async (
     await dataSources.GroupModel.removeProjectFromGroup(project.id, group);
   }
 
-  const syncGroups = groupsInput.map(async (groupInput) => {
-    const updatedGroup = await dataSources.GroupModel.loadGroupByIdOrName(groupInput);
+  const syncGroups = groupsInput.map(async groupInput => {
+    const updatedGroup = await dataSources.GroupModel.loadGroupByIdOrName(
+      groupInput,
+    );
     // @TODO: Load ProjectIDs of subgroups as well
-    const projectIdsArray = await dataSources.GroupModel.getProjectsFromGroupAndSubgroups(updatedGroup)
-    const projectIds = R.join(',')(projectIdsArray)
-    OpendistroSecurityOperations(sqlClient, dataSources.GroupModel).syncGroup(updatedGroup.name, projectIds);
+    const projectIdsArray = await dataSources.GroupModel.getProjectsFromGroupAndSubgroups(
+      updatedGroup,
+    );
+    const projectIds = R.join(',')(projectIdsArray);
+    OpendistroSecurityOperations(sqlClient, dataSources.GroupModel).syncGroup(
+      updatedGroup.name,
+      projectIds,
+    );
   });
 
   try {
     await Promise.all(syncGroups);
   } catch (err) {
-    throw new Error(`Could not sync groups with opendistro-security: ${err.message}`);
+    throw new Error(
+      `Could not sync groups with opendistro-security: ${err.message}`,
+    );
   }
 
   return await projectHelpers(sqlClient).getProjectById(project.id);

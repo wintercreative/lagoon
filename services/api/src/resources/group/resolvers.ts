@@ -5,7 +5,12 @@ import { isPatchEmpty } from '../../util/db';
 import { GroupNotFoundError } from '../../models/group';
 import * as projectHelpers from '../project/helpers';
 import { OpendistroSecurityOperations } from './opendistroSecurity';
-import { getEnvironmentsByProjectId } from '../environment/resolvers';
+import {
+  getEnvironmentsByProjectId,
+  getEnvironmentStorageMonthByEnvironmentId,
+  getEnvironmentHoursMonthByEnvironmentId,
+  getEnvironmentHitsMonthByEnvironmentId,
+} from '../environment/resolvers';
 
 export const getAllGroups = async (
   root,
@@ -439,61 +444,86 @@ type Project = {
 };
 
 export const getBillingGroupCost = async (root, args, context) => {
+  const {
+    GroupModel: { loadGroupByIdOrName },
+  } = context.dataSources;
+  const group = await loadGroupByIdOrName(args.input);
+
   const projects = await Promise.all(
     await getAllProjectsInGroup(root, args, context),
   );
+
+  // Get all environments for each project
   const getEnvsFromPid = async id => Promise.all(await getEnvironmentsByProjectId({ id }, args, context));
-  const projectMapFn = async project => ({
-    ...project,
-    environments: await Promise.all(await getEnvsFromPid(project.id)),
-  });
+  const projectMapFn = async project => {
+    const environments = await Promise.all(await getEnvsFromPid(project.id));
+    const evironmentsWithHitsStorageHours = await Promise.all(environments.map(async environment => {
+      const hits = await getEnvironmentHitsMonthByEnvironmentId({ openshiftProjectName: environment['openshiftProjectName'] }, args, context).catch(err => ({ hits: 0 }));
+      const storage = await getEnvironmentStorageMonthByEnvironmentId({ id: environment['id'] }, args, context);
+      const hours = await getEnvironmentHoursMonthByEnvironmentId({ id: environment['id'] }, args, context);
 
-  const projectsWithEnvironments = projects.map(projectMapFn);
-  console.log(await Promise.all(projectsWithEnvironments));
+      return {
+        id: environment['id'],
+        name: environment['name'],
+        type: environment['environmentType'],
+        hits: hits['hits'],
+        storage: storage['bytesUsed'],
+        hours: hours.hours,
+      };
+    }));
 
+    return ({ ...project, environments: {...evironmentsWithHitsStorageHours} });
+  };
+
+  const projectsWithEnvironments = await Promise.all(projects.map(projectMapFn));
+
+  // Group by availability
   const availabilityFilterFn = (filterKey: string) => ({ availability }) =>
     availability === filterKey;
-  const highAvailabilityProjectsInGroup = projects.filter(
+  const highAvailabilityProjectsInGroup = projectsWithEnvironments.filter(
     availabilityFilterFn('HIGH'),
   );
-  const standardAvailabilityProjectsInGroup = projects.filter(
+  const standardAvailabilityProjectsInGroup = projectsWithEnvironments.filter(
     availabilityFilterFn('STANDARD'),
   );
 
-  // TODO - Get all environments for the project
-  // getEnvironmentsByProjectId
+  const projectCostFn = project => {
+    return ({
+      id: project.id,
+      name: project.name,
+      hits: 1_000_000,
+      storage: 1_000_000,
+      hours: {
+        prod: 1_000_000,
+        dev: 1_000_000,
+      },
+      environments: { ...project.environments },
+    });
+  };
 
-  // TODO - for each environment loop through and call
-  // getEnvironmentStorageMonthByEnvironmentId
-  // getEnvironmentHoursMonthByEnvironmentId
-  // getEnvironmentHitsMonthByEnvironmentId
-  // services/api/src/resources/environment/resolvers.js
-
-  const projectCostFn = project => ({
-    id: project.id,
-    name: project.name,
-    hits: 1000,
-    storage: 1000,
-    hours: {
-      prod: 10,
-      dev: 20,
+  const high = highAvailabilityProjectsInGroup.length > 0 ? {
+    high: {
+      hitCost: 1_000_000,
+      storageCost: 1_000_000,
+      hoursCost: 1_000_000,
+      projects: highAvailabilityProjectsInGroup.map(projectCostFn),
     },
-  });
+  } : {};
+
+  const standard = standardAvailabilityProjectsInGroup.length > 0 ? {
+    standard: {
+      hitCost: 1_000_000,
+      storageCost: 1_000_000,
+      hoursCost: 1_000_000,
+      projects: standardAvailabilityProjectsInGroup.map(projectCostFn),
+    },
+  } : {};
 
   return {
+    currency: group.currency,
     availability: {
-      high: {
-        hitCost: 1_000_000,
-        storageCost: 1_000_000,
-        hoursCost: 1_000_000,
-        projects: [highAvailabilityProjectsInGroup.map(projectCostFn)],
-      },
-      standard: {
-        hitCost: 1_000_000,
-        storageCost: 1_000_000,
-        hoursCost: 1_000_000,
-        projects: [standardAvailabilityProjectsInGroup.map(projectCostFn)],
-      },
+      ...high,
+      ...standard,
     },
   };
 };

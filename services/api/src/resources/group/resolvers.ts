@@ -6,11 +6,18 @@ import { GroupNotFoundError } from '../../models/group';
 import * as projectHelpers from '../project/helpers';
 import { OpendistroSecurityOperations } from './opendistroSecurity';
 import {
-  getEnvironmentsByProjectId,
-  getEnvironmentStorageMonthByEnvironmentId,
-  getEnvironmentHoursMonthByEnvironmentId,
-  getEnvironmentHitsMonthByEnvironmentId,
+  getEnvironmentsByProjectId as getEnvironments,
+  getEnvironmentStorageMonthByEnvironmentId as getStorage,
+  getEnvironmentHoursMonthByEnvironmentId as getHours,
+  getEnvironmentHitsMonthByEnvironmentId as getHits,
 } from '../environment/resolvers';
+
+import {
+  hitsCost,
+  storageCost,
+  prodCost,
+  devCost,
+} from '../billing/billingCalculations';
 
 export const getAllGroups = async (
   root,
@@ -444,36 +451,35 @@ type Project = {
 };
 
 export const getBillingGroupCost = async (root, args, context) => {
-  const {
-    GroupModel: { loadGroupByIdOrName },
-  } = context.dataSources;
-  const group = await loadGroupByIdOrName(args.input);
 
-  const projects = await Promise.all(
-    await getAllProjectsInGroup(root, args, context),
-  );
+  const group = await context.dataSources.GroupModel.loadGroupByIdOrName(args.input);
+  const projects = await Promise.all(await getAllProjectsInGroup(root, args, context));
 
   // Get all environments for each project
-  const getEnvsFromPid = async id => Promise.all(await getEnvironmentsByProjectId({ id }, args, context));
+  const getEnvsFromPid = async id => Promise.all(await getEnvironments({ id }, args, context));
+
+  // TODO: TEMPORARY PLACEHOLDER UNTIL WE HAVE OPENSHIFT DATA
+  const errorCatcherFn = responseObj => err => ({ ...responseObj });
+
+  const getEnvironmentHitsStorageHours = async (openshiftProjectName, id) => ({
+    hits: await getHits({ openshiftProjectName }, args, context).catch(errorCatcherFn({ hits: 0 })),
+    storage: await getStorage({ id }, args, context).catch(errorCatcherFn({ bytesUsed: 0 })),
+    hours: await getHours({ id }, args, context).catch(errorCatcherFn({ hours: 0 })),
+  });
+
   const projectMapFn = async project => {
     const environments = await Promise.all(await getEnvsFromPid(project.id));
-    const evironmentsWithHitsStorageHours = await Promise.all(environments.map(async environment => {
-      const hits = await getEnvironmentHitsMonthByEnvironmentId({ openshiftProjectName: environment['openshiftProjectName'] }, args, context).catch(err => ({ hits: 0 }));
-      const storage = await getEnvironmentStorageMonthByEnvironmentId({ id: environment['id'] }, args, context);
-      const hours = await getEnvironmentHoursMonthByEnvironmentId({ id: environment['id'] }, args, context);
-
-      return {
-        id: environment['id'],
-        name: environment['name'],
-        type: environment['environmentType'],
-        hits: hits['hits'],
-        storage: storage['bytesUsed'],
-        hours: hours.hours,
-      };
-    }));
-
-    return ({ ...project, environments: {...evironmentsWithHitsStorageHours} });
+    return ({ ...project, environments: { ...await Promise.all(environments.map(environmentDataMapFn)) } });
   };
+
+  const environmentDataMapFn = async ({
+    id, name, openshiftProjectName, environmentType,
+  }) => ({
+    id,
+    name,
+    type: environmentType,
+    ...await getEnvironmentHitsStorageHours(openshiftProjectName, id),
+  });
 
   const projectsWithEnvironments = await Promise.all(projects.map(projectMapFn));
 
@@ -487,37 +493,76 @@ export const getBillingGroupCost = async (root, args, context) => {
     availabilityFilterFn('STANDARD'),
   );
 
-  const projectCostFn = project => {
-    return ({
-      id: project.id,
-      name: project.name,
-      hits: 1_000_000,
-      storage: 1_000_000,
-      hours: {
-        prod: 1_000_000,
-        dev: 1_000_000,
+  /*
+    {
+      name: 'v-ch',
+      month: 7,
+      year: 2019,
+      hits: 1_075,
+      availability: AVAILABILITY.standard,
+      storageDays: 197,
+      prodHours: 744,
+      devHours: 0,
+    },
+  */
+  const projectCostFn = project => ({
+    id: project.id,
+    name: project.name,
+    availability: project.availability,
+    month: 7,
+    year: 2019,
+    hits: 343_446, // TODO: TEMPORARY - CALCULATE FROM ENVS
+    storageDays: 197, // TODO: TEMPORARY - CALCULATE FROM ENVS
+    prodHours: 1_488, // TODO: TEMPORARY - CALCULATE FROM ENVS
+    devHours: 744, // TODO: TEMPORARY - CALCULATE FROM ENVS
+    environments: { ...project.environments },
+  });
+
+  const getHighAvailabilityCosts = () => {
+    const highAvailabilityProjects = highAvailabilityProjectsInGroup.map(projectCostFn);
+    const billingGroup = { projects: highAvailabilityProjects, currency: group.currency };
+    const result = {
+      high: {
+        hitCost: hitsCost(billingGroup),
+        storageCost: storageCost(billingGroup),
+        environmentCost: {
+          prod: prodCost(billingGroup),
+          dev: devCost(billingGroup),
+        },
+        projects: [...highAvailabilityProjects],
       },
-      environments: { ...project.environments },
-    });
+    };
+    return result;
   };
 
-  const high = highAvailabilityProjectsInGroup.length > 0 ? {
-    high: {
-      hitCost: 1_000_000,
-      storageCost: 1_000_000,
-      hoursCost: 1_000_000,
-      projects: highAvailabilityProjectsInGroup.map(projectCostFn),
-    },
-  } : {};
+  const getStandardAvailabilityCosts = () => {
+    const standardAvailabilityProjects = standardAvailabilityProjectsInGroup.map(projectCostFn);
+    const billingGroup = { projects: standardAvailabilityProjects, currency: group.currency };
+    const result = {
+      standard: {
+        hitCost: hitsCost(billingGroup),
+        storageCost: storageCost(billingGroup),
+        environmentCost: {
+          prod: prodCost(billingGroup),
+          dev: devCost(billingGroup),
+        },
+        projects: [...standardAvailabilityProjects],
+      },
+    };
+    return result;
+  };
 
-  const standard = standardAvailabilityProjectsInGroup.length > 0 ? {
-    standard: {
-      hitCost: 1_000_000,
-      storageCost: 1_000_000,
-      hoursCost: 1_000_000,
-      projects: standardAvailabilityProjectsInGroup.map(projectCostFn),
-    },
-  } : {};
+  const high = highAvailabilityProjectsInGroup.length > 0 ? getHighAvailabilityCosts() : {};
+  const standard = standardAvailabilityProjectsInGroup.length > 0 ? getStandardAvailabilityCosts() : {};
+
+  // const standard = standardAvailabilityProjectsInGroup.length > 0 ? {
+  //   standard: {
+  //     hitCost: 1_000_000,
+  //     storageCost: 1_000_000,
+  //     hoursCost: 1_000_000,
+  //     projects: standardAvailabilityProjectsInGroup.map(projectCostFn),
+  //   },
+  // } : {};
 
   return {
     currency: group.currency,

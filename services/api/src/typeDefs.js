@@ -121,7 +121,7 @@ const typeDefs = gql`
     comment: String
     gitlabId: Int
     sshKeys: [SshKey]
-    groups: [Group]
+    groups: [GroupInterface]
   }
 
   type GroupMembership {
@@ -129,14 +129,33 @@ const typeDefs = gql`
     role: GroupRole
   }
 
-  type Group {
+  interface GroupInterface {
     id: String
     name: String
     type: String
-    currency: String
-    groups: [Group]
+    groups: [GroupInterface]
     members: [GroupMembership]
     projects: [Project]
+  }
+
+  type Group implements GroupInterface {
+    id: String
+    name: String
+    type: String
+    groups: [GroupInterface]
+    members: [GroupMembership]
+    projects: [Project]
+  }
+
+  type BillingGroup implements GroupInterface {
+    id: String
+    name: String
+    type: String
+    groups: [GroupInterface]
+    members: [GroupMembership]
+    projects: [Project]
+    currency: String
+    billingSoftware: String
   }
 
   type Openshift {
@@ -296,7 +315,7 @@ const typeDefs = gql`
     """
     Which groups are directly linked to project
     """
-    groups: [Group]
+    groups: [GroupInterface]
   }
 
   """
@@ -509,7 +528,7 @@ const typeDefs = gql`
     """
     Returns all Groups matching given filter (all if no filter defined)
     """
-    allGroups(name: String): [Group]
+    allGroups(name: String): [GroupInterface]
     """
     Returns all projects in a given group
     """

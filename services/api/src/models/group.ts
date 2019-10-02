@@ -48,10 +48,10 @@ interface GroupModel {
   loadGroupByIdOrName: (groupInput: GroupEdit) => Promise<Group | BillingGroup>;
   loadParentGroup: (groupInput: Group) => Promise<Group | BillingGroup>;
   loadGroupsByAttribute: (
-    filterFn: AttributeFilterFn
+    filterFn: AttributeFilterFn,
   ) => Promise<Group[] | BillingGroup[]>;
   loadGroupsByProjectId: (
-    projectId: number
+    projectId: number,
   ) => Promise<Group[] | BillingGroup[]>;
   getProjectsFromGroupAndParents: (group: Group) => Promise<number[]>;
   getProjectsFromGroupAndSubgroups: (group: Group) => Promise<number[]>;
@@ -61,11 +61,11 @@ interface GroupModel {
   addUserToGroup: (
     user: User,
     group: Group,
-    role: string
+    role: string,
   ) => Promise<Group | BillingGroup>;
   removeUserFromGroup: (
     user: User,
-    group: Group
+    group: Group,
   ) => Promise<Group | BillingGroup>;
   addProjectToGroup: (projectId: number, group: Group) => Promise<void>;
   removeProjectFromGroup: (projectId: number, group: Group) => Promise<void>;
@@ -92,21 +92,19 @@ const attrLagoonProjectsLens = R.compose(
   // @ts-ignore
   attrLens,
   lagoonProjectsLens,
-  R.lensPath([0])
+  R.lensPath([0]),
 );
 
 export const isRoleSubgroup = R.pathEq(
   ['attributes', 'type', 0],
-  'role-subgroup'
+  'role-subgroup',
 );
 
-const getKeyValueOrNullFromAttributes = (
-  key: string,
-  group: GroupRepresentation
-) => String(R.pathOr(null, ['attributes', key], group));
+const attributeKVOrNull = (key: string, group: GroupRepresentation) =>
+  String(R.pathOr(null, ['attributes', key], group));
 
 const transformKeycloakGroups = async (
-  keycloakGroups: GroupRepresentation[]
+  keycloakGroups: GroupRepresentation[],
 ): Promise<Group[] | BillingGroup[] | BillingGroup[]> => {
   // Map from keycloak object to group object
   const groups = keycloakGroups.map((keycloakGroup: GroupRepresentation):
@@ -114,21 +112,22 @@ const transformKeycloakGroups = async (
     | BillingGroup => ({
     id: keycloakGroup.id,
     name: keycloakGroup.name,
-    type: getKeyValueOrNullFromAttributes('type', keycloakGroup),
-    currency: getKeyValueOrNullFromAttributes('currency', keycloakGroup),
+    type: attributeKVOrNull('type', keycloakGroup),
+    currency: attributeKVOrNull('currency', keycloakGroup),
+    billingSoftware: attributeKVOrNull('billingSoftware', keycloakGroup),
     path: keycloakGroup.path,
     attributes: keycloakGroup.attributes,
-    subGroups: keycloakGroup.subGroups
+    subGroups: keycloakGroup.subGroups,
   }));
 
   const groupsWithGroupsAndMembers = groups.map(
     async (group: Group | BillingGroup): Promise<Group | BillingGroup> => ({
       ...group,
       groups: await transformKeycloakGroups(
-        R.reject(isRoleSubgroup)(group.subGroups)
+        R.reject(isRoleSubgroup)(group.subGroups),
       ),
-      members: await getGroupMembership(group)
-    })
+      members: await getGroupMembership(group),
+    }),
   );
 
   return Promise.all(groupsWithGroupsAndMembers);
@@ -136,7 +135,7 @@ const transformKeycloakGroups = async (
 
 const loadGroupById = async (id: string): Promise<Group | BillingGroup> => {
   const keycloakGroup = await keycloakAdminClient.groups.findOne({
-    id
+    id,
   });
 
   if (R.isNil(keycloakGroup)) {
@@ -150,7 +149,7 @@ const loadGroupById = async (id: string): Promise<Group | BillingGroup> => {
 
 const loadGroupByName = async (name: string): Promise<Group | BillingGroup> => {
   const keycloakGroups = await keycloakAdminClient.groups.find({
-    search: name
+    search: name,
   });
 
   if (R.isEmpty(keycloakGroups)) {
@@ -167,7 +166,7 @@ const loadGroupByName = async (name: string): Promise<Group | BillingGroup> => {
   const groupId = R.pipe(
     R.reduce(flattenGroups, []),
     R.filter(R.propEq('name', name)),
-    R.path(['0', 'id'])
+    R.path(['0', 'id']),
   )(keycloakGroups);
 
   if (R.isNil(groupId)) {
@@ -179,7 +178,7 @@ const loadGroupByName = async (name: string): Promise<Group | BillingGroup> => {
 };
 
 const loadGroupByIdOrName = async (
-  groupInput: GroupEdit
+  groupInput: GroupEdit,
 ): Promise<Group | BillingGroup> => {
   if (R.prop('id', groupInput)) {
     return loadGroupById(R.prop('id', groupInput));
@@ -208,17 +207,17 @@ const loadAllGroups = async (): Promise<Group[] | BillingGroup[]> => {
 };
 
 const loadParentGroup = async (
-  groupInput: Group
+  groupInput: Group,
 ): Promise<Group | BillingGroup> =>
   asyncPipe(
     R.prop('path'),
     R.split('/'),
     R.nth(-2),
-    R.cond([[R.isEmpty, R.always(null)], [R.T, loadGroupByName]])
+    R.cond([[R.isEmpty, R.always(null)], [R.T, loadGroupByName]]),
   )(groupInput);
 
 const loadGroupsByAttribute = async (
-  filterFn: AttributeFilterFn
+  filterFn: AttributeFilterFn,
 ): Promise<Group[] | BillingGroup[]> => {
   const allGroups = await loadAllGroups();
 
@@ -230,22 +229,22 @@ const loadGroupsByAttribute = async (
           return filterFn(
             {
               name: attribute[0],
-              value: attribute[1]
+              value: attribute[1],
             },
-            group
+            group,
           );
         }
 
         return isMatch;
-      }, false)
-    )(group.attributes)
+      }, false),
+    )(group.attributes),
   )(allGroups);
 
   return filteredGroups;
 };
 
 const loadGroupsByProjectId = async (
-  projectId: number
+  projectId: number,
 ): Promise<Group[] | BillingGroup[]> => {
   const filterFn = attribute => {
     if (attribute.name === 'lagoon-projects') {
@@ -263,12 +262,12 @@ const loadGroupsByProjectId = async (
 
 // Recursive function to load projects "up" the group chain
 const getProjectsFromGroupAndParents = async (
-  group: Group
+  group: Group,
 ): Promise<number[]> => {
   const projectIds = R.pipe(
     R.pathOr('', ['attributes', 'lagoon-projects', 0]),
     R.split(','),
-    R.reject(R.isEmpty)
+    R.reject(R.isEmpty),
   )(group);
 
   const parentGroup = await loadParentGroup(group);
@@ -279,18 +278,18 @@ const getProjectsFromGroupAndParents = async (
   return [
     // @ts-ignore
     ...projectIds,
-    ...parentProjectIds
+    ...parentProjectIds,
   ];
 };
 
 // Recursive function to load projects "down" the group chain
 const getProjectsFromGroupAndSubgroups = async (
-  group: Group
+  group: Group,
 ): Promise<number[]> => {
   const groupProjectIds = R.pipe(
     R.pathOr('', ['attributes', 'lagoon-projects', 0]),
     R.split(','),
-    R.reject(R.isEmpty)
+    R.reject(R.isEmpty),
   )(group);
 
   let subGroupProjectIds = [];
@@ -302,7 +301,7 @@ const getProjectsFromGroupAndSubgroups = async (
   return [
     // @ts-ignore
     ...groupProjectIds,
-    ...subGroupProjectIds
+    ...subGroupProjectIds,
   ];
 };
 
@@ -312,14 +311,14 @@ const getGroupMembership = async (group: Group): Promise<GroupMembership[]> => {
   let membership = [];
   for (const roleSubgroup of roleSubgroups) {
     const keycloakUsers = await keycloakAdminClient.groups.listMembers({
-      id: roleSubgroup.id
+      id: roleSubgroup.id,
     });
 
     const users = await transformKeycloakUsers(keycloakUsers);
     const members = users.map(user => ({
       user,
       role: roleSubgroup.realmRoles[0],
-      roleSubgroupId: roleSubgroup.id
+      roleSubgroupId: roleSubgroup.id,
     }));
 
     membership = [...membership, ...members];
@@ -347,7 +346,7 @@ const addGroup = async (groupInput: Group): Promise<Group | BillingGroup> => {
   try {
     // @ts-ignore
     response = await keycloakAdminClient.groups.create({
-      ...pickNonNil(['id', 'name', 'attributes'], groupInput)
+      ...pickNonNil(['id', 'name', 'attributes'], groupInput),
     });
   } catch (err) {
     if (err.response.status && err.response.status === 409) {
@@ -363,21 +362,21 @@ const addGroup = async (groupInput: Group): Promise<Group | BillingGroup> => {
   if (R.prop('parentGroupId', groupInput)) {
     try {
       const parentGroup = await loadGroupById(
-        R.prop('parentGroupId', groupInput)
+        R.prop('parentGroupId', groupInput),
       );
 
       await keycloakAdminClient.groups.setOrCreateChild(
         {
-          id: parentGroup.id
+          id: parentGroup.id,
         },
         {
-          id: group.id
-        }
+          id: group.id,
+        },
       );
     } catch (err) {
       if (err instanceof GroupNotFoundError) {
         throw new GroupNotFoundError(
-          `Parent group not found ${R.prop('parentGroupId', groupInput)}`
+          `Parent group not found ${R.prop('parentGroupId', groupInput)}`,
         );
       } else if (
         err.message.includes('location header is not found in request')
@@ -393,19 +392,19 @@ const addGroup = async (groupInput: Group): Promise<Group | BillingGroup> => {
 };
 
 const updateGroup = async (
-  groupInput: GroupEdit
+  groupInput: GroupEdit,
 ): Promise<Group | BillingGroup> => {
   const oldGroup = await loadGroupById(groupInput.id);
 
   try {
     await keycloakAdminClient.groups.update(
       {
-        id: groupInput.id
+        id: groupInput.id,
       },
       //@ts-ignore
       {
-        ...pickNonNil(['name', 'attributes'], groupInput)
-      }
+        ...pickNonNil(['name', 'attributes'], groupInput),
+      },
     );
   } catch (err) {
     if (err.response.status && err.response.status === 409) {
@@ -425,7 +424,7 @@ const updateGroup = async (
     for (const roleSubgroup of roleSubgroups) {
       await updateGroup({
         id: roleSubgroup.id,
-        name: R.replace(oldGroup.name, newGroup.name, roleSubgroup.name)
+        name: R.replace(oldGroup.name, newGroup.name, roleSubgroup.name),
       });
     }
   }
@@ -448,29 +447,29 @@ const deleteGroup = async (id: string): Promise<void> => {
 const addUserToGroup = async (
   user: User,
   groupInput: Group,
-  roleName: string
+  roleName: string,
 ): Promise<Group | BillingGroup> => {
   const group = await loadGroupById(groupInput.id);
   // Load or create the role subgroup.
   let roleSubgroup: Group;
   // @ts-ignore
   roleSubgroup = R.find(R.propEq('name', `${group.name}-${roleName}`))(
-    group.subGroups
+    group.subGroups,
   );
   if (!roleSubgroup) {
     roleSubgroup = await addGroup({
       name: `${group.name}-${roleName}`,
       parentGroupId: group.id,
       attributes: {
-        type: ['role-subgroup']
-      }
+        type: ['role-subgroup'],
+      },
     });
     const role = await keycloakAdminClient.roles.findOneByName({
-      name: roleName
+      name: roleName,
     });
     await keycloakAdminClient.groups.addRealmRoleMappings({
       id: roleSubgroup.id,
-      roles: [{ id: role.id, name: role.name }]
+      roles: [{ id: role.id, name: role.name }],
     });
   }
 
@@ -478,7 +477,7 @@ const addUserToGroup = async (
   try {
     await keycloakAdminClient.users.addToGroup({
       id: user.id,
-      groupId: roleSubgroup.id
+      groupId: roleSubgroup.id,
     });
   } catch (err) {
     throw new Error(`Could not add user to group: ${err.message}`);
@@ -489,7 +488,7 @@ const addUserToGroup = async (
 
 const removeUserFromGroup = async (
   user: User,
-  group: Group
+  group: Group,
 ): Promise<Group | BillingGroup> => {
   const members = await getGroupMembership(group);
   const userMembership = R.find(R.pathEq(['user', 'id'], user.id))(members);
@@ -501,7 +500,7 @@ const removeUserFromGroup = async (
         // @ts-ignore
         id: userMembership.user.id,
         // @ts-ignore
-        groupId: userMembership.roleSubgroupId
+        groupId: userMembership.roleSubgroupId,
       });
     } catch (err) {
       throw new Error(`Could not remove user from group: ${err.message}`);
@@ -513,7 +512,7 @@ const removeUserFromGroup = async (
 
 const addProjectToGroup = async (
   projectId: number,
-  groupInput: Group
+  groupInput: Group,
 ): Promise<void> => {
   const group = await loadGroupById(groupInput.id);
   const newGroupProjects = R.pipe(
@@ -522,31 +521,31 @@ const addProjectToGroup = async (
     R.split(','),
     R.append(`${projectId}`),
     R.uniq,
-    R.join(',')
+    R.join(','),
   )(group);
 
   try {
     await keycloakAdminClient.groups.update(
       {
-        id: group.id
+        id: group.id,
       },
       {
         attributes: {
           ...group.attributes,
-          'lagoon-projects': [newGroupProjects]
-        }
-      }
+          'lagoon-projects': [newGroupProjects],
+        },
+      },
     );
   } catch (err) {
     throw new Error(
-      `Error setting projects for group ${group.name}: ${err.message}`
+      `Error setting projects for group ${group.name}: ${err.message}`,
     );
   }
 };
 
 const removeProjectFromGroup = async (
   projectId: number,
-  group: Group
+  group: Group,
 ): Promise<void> => {
   const newGroupProjects = R.pipe(
     R.view(attrLagoonProjectsLens),
@@ -554,24 +553,24 @@ const removeProjectFromGroup = async (
     R.split(','),
     R.without([`${projectId}`]),
     R.uniq,
-    R.join(',')
+    R.join(','),
   )(group);
 
   try {
     await keycloakAdminClient.groups.update(
       {
-        id: group.id
+        id: group.id,
       },
       {
         attributes: {
           ...group.attributes,
-          'lagoon-projects': [newGroupProjects]
-        }
-      }
+          'lagoon-projects': [newGroupProjects],
+        },
+      },
     );
   } catch (err) {
     throw new Error(
-      `Error setting projects for group ${group.name}: ${err.message}`
+      `Error setting projects for group ${group.name}: ${err.message}`,
     );
   }
 };
@@ -592,5 +591,5 @@ export const Group = (): GroupModel => ({
   addUserToGroup,
   removeUserFromGroup,
   addProjectToGroup,
-  removeProjectFromGroup
+  removeProjectFromGroup,
 });

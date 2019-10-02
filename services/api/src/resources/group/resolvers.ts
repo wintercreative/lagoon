@@ -469,22 +469,31 @@ export const updateProjectBillingGroup = async (
     removeProjectFromGroup,
   } = dataSources.GroupModel;
 
-  // Billing groups for this project
+  // Get all billing groups for this project
   const projectGroups = await loadGroupsByProjectId(project.id);
+  const billingGroupFilterFn = group =>
+    'type' in group.attributes && group.attributes.type[0] === 'billing';
+  const projectBillingGroups = projectGroups.filter(billingGroupFilterFn);
 
-  await projectGroups.filter(async group => {
-    const { id, attributes } = group;
-    if ('type' in attributes && attributes.type[0] === 'billing') {
-      await dataSources.GroupModel.removeProjectFromGroup(id, group);
-    }
-  });
+  for (const group of projectBillingGroups) {
+    await dataSources.GroupModel.removeProjectFromGroup(project.id, group);
+  }
 
   const group = await loadGroupByIdOrName(groupInput);
   await addProjectToGroup(project.id, group);
   return projectHelpers(sqlClient).getProjectById(project.id);
 };
 
-export const removeProjectFromBillingGroup = async () => {};
+export const removeProjectFromBillingGroup = async (
+  root,
+  { input: { project, group } },
+  context,
+) =>
+  removeGroupsFromProject(
+    root,
+    { input: { project, groups: [group] } },
+    context,
+  );
 
 export const getAllProjectsByGroupId = async (root, input, context) =>
   getAllProjectsInGroup(root, { input: { id: root.id } }, { ...context });

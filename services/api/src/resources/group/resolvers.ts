@@ -21,18 +21,17 @@ import {
 
 export const getAllGroups = async (
   root,
-  { name },
+  { name, type },
   { hasPermission, dataSources, keycloakGrant },
 ) => {
   try {
     await hasPermission('group', 'viewAll');
 
-    if (name) {
-      const group = await dataSources.GroupModel.loadGroupByName(name);
-      return [group];
-    } else {
-      return await dataSources.GroupModel.loadAllGroups();
-    }
+    const groups = await dataSources.GroupModel.loadAllGroups();
+    const filterFn = (key, val) => group => group[key].includes(val);
+    const filteredByName = groups.filter(filterFn('name', name));
+    const filteredByType = groups.filter(filterFn('type', type));
+    return name || type ? R.union(filteredByName, filteredByType) : groups;
   } catch (err) {
     if (err instanceof GroupNotFoundError) {
       return [];
@@ -352,7 +351,7 @@ export const addGroupsToProject = async (
 
 export const addBillingGroup = async (
   _root,
-  { input: { name, currency } },
+  { input: { name, currency, billingSoftware } },
   { dataSources, hasPermission },
 ) => {
   await hasPermission('group', 'add');
@@ -365,11 +364,42 @@ export const addBillingGroup = async (
     throw new Error('You must provide a Currency for the Billing Group');
   }
 
-  const gData = {
+  return dataSources.GroupModel.addGroup({
     name,
-    attributes: { type: ['billing'], currency: [currency] },
+    attributes: {
+      type: ['billing'],
+      currency: [currency],
+      ...(billingSoftware ? { billingSoftware: [billingSoftware] } : {}),
+    },
+  });
+};
+
+export const updateBillingGroup = async (
+  _root,
+  { input: { group: groupInput, patch } },
+  { dataSources, hasPermission },
+) => {
+  const group = await dataSources.GroupModel.loadGroupByIdOrName(groupInput);
+  const { id, attributes } = group;
+
+  await hasPermission('group', 'update', { group: id });
+
+  if (isPatchEmpty({ patch })) {
+    throw new Error('Input patch requires at least 1 attribute');
+  }
+
+  const { name, currency, billingSoftware } = patch;
+  const updatedAttributes = {
+    ...attributes,
+    type: ['billing'],
+    ...(currency ? { currency: [currency] } : {}),
+    ...(billingSoftware ? { billingSoftware: [billingSoftware] } : {}),
   };
-  return dataSources.GroupModel.addGroup(gData);
+
+  const groupPatch = { ...group, name, attributes: updatedAttributes };
+  const updatedGroup = await dataSources.GroupModel.updateGroup(groupPatch);
+
+  return updatedGroup;
 };
 
 export const addProjectToBillingGroup = async (
@@ -399,7 +429,7 @@ export const addProjectToBillingGroup = async (
   const projectGroups = await loadGroupsByProjectId(project.id);
 
   const projectBillingGroups = projectGroups.filter(group => {
-    const { attributes } = group;
+    const { id, attributes } = group;
     return !!('type' in attributes && attributes.type[0] === 'billing');
   });
 
@@ -414,6 +444,47 @@ export const addProjectToBillingGroup = async (
   await addProjectToGroup(project.id, group);
   return projectHelpers(sqlClient).getProjectById(project.id);
 };
+
+export const updateProjectBillingGroup = async (
+  _root,
+  { input: { project: projectInput, group: groupInput } },
+  { dataSources, sqlClient, hasPermission },
+) => {
+  const project = await projectHelpers(sqlClient).getProjectByProjectInput(
+    projectInput,
+  );
+
+  await hasPermission('project', 'addGroup', {
+    project: project.id,
+  });
+
+  if (R.isEmpty(groupInput)) {
+    throw new Error('You must provide a billing group name or id');
+  }
+
+  const {
+    loadGroupsByProjectId,
+    loadGroupByIdOrName,
+    addProjectToGroup,
+    removeProjectFromGroup,
+  } = dataSources.GroupModel;
+
+  // Billing groups for this project
+  const projectGroups = await loadGroupsByProjectId(project.id);
+
+  await projectGroups.filter(async group => {
+    const { id, attributes } = group;
+    if ('type' in attributes && attributes.type[0] === 'billing') {
+      await dataSources.GroupModel.removeProjectFromGroup(id, group);
+    }
+  });
+
+  const group = await loadGroupByIdOrName(groupInput);
+  await addProjectToGroup(project.id, group);
+  return projectHelpers(sqlClient).getProjectById(project.id);
+};
+
+export const removeProjectFromBillingGroup = async () => {};
 
 export const getAllProjectsByGroupId = async (root, input, context) =>
   getAllProjectsInGroup(root, { input: { id: root.id } }, { ...context });

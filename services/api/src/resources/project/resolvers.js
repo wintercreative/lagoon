@@ -382,6 +382,7 @@ const updateProject = async (
       patch: {
         name,
         gitUrl,
+        availability,
         privateKey,
         subfolder,
         activeSystemsDeploy,
@@ -459,6 +460,7 @@ const updateProject = async (
       patch: {
         name,
         gitUrl,
+        availability,
         privateKey,
         subfolder,
         activeSystemsDeploy,

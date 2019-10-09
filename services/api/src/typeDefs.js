@@ -92,6 +92,7 @@ const typeDefs = gql`
 
   enum Currency {
     AUD
+    EUR
     GBP
     USD
     CHF

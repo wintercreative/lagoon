@@ -114,6 +114,11 @@ export const getGroupsByUserId = async (
   }
 };
 
+export const getGroupByName = async (root, { name }, { dataSources, hasPermission }) => {
+  await hasPermission('group', 'viewAll');
+  return await dataSources.GroupModel.loadGroupByIdOrName({ name });
+}
+
 export const addGroup = async (
   _root,
   { input },

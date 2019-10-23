@@ -114,10 +114,14 @@ export const getGroupsByUserId = async (
   }
 };
 
-export const getGroupByName = async (root, { name }, { dataSources, hasPermission }) => {
+export const getGroupByName = async (
+  root,
+  { name },
+  { dataSources, hasPermission },
+) => {
   await hasPermission('group', 'viewAll');
   return await dataSources.GroupModel.loadGroupByIdOrName({ name });
-}
+};
 
 export const addGroup = async (
   _root,
@@ -536,7 +540,7 @@ export const getBillingGroupCost = async (root, args, context) => {
 
   const getEnvironmentHitsStorageHours = async (openshiftProjectName, id) => ({
     hits: await getHits({ openshiftProjectName }, args, context).catch(
-      errorCatcherFn({ hits: 0 }),
+      errorCatcherFn({ total: 0 }),
     ),
     storage: await getStorage({ id }, args, context).catch(
       errorCatcherFn({ bytesUsed: 0 }),
@@ -582,18 +586,52 @@ export const getBillingGroupCost = async (root, args, context) => {
     availabilityFilterFn('STANDARD'),
   );
 
-  const projectCostFn = project => ({
-    id: project.id,
-    name: project.name,
-    availability: project.availability,
-    month: 7,
-    year: 2019,
-    hits: 343446, // TODO: TEMPORARY - CALCULATE FROM ENVS
-    storageDays: 197, // TODO: TEMPORARY - CALCULATE FROM ENVS
-    prodHours: 1488, // TODO: TEMPORARY - CALCULATE FROM ENVS
-    devHours: 744, // TODO: TEMPORARY - CALCULATE FROM ENVS
-    environments: { ...project.environments },
-  });
+  const calculateHitsStorageHoursFromProjectEnvironments = environments => {
+    let totalHits = 0;
+    let totalStorage = 0;
+    let totalDevHours = 0;
+    let totalProdHours = 0;
+    Object.entries(environments).forEach(([key, val]) => {
+      if (environments[key].type === 'production') {
+        totalHits += environments[key].hits.total;
+        totalProdHours += environments[key].hours.hours;
+      } else {
+        totalDevHours += environments[key].hours.hours;
+      }
+      totalStorage += environments[key].storage.bytesUsed;
+    });
+    return {
+      hits: totalHits,
+      storageDays: totalStorage / 1000 / 1000,
+      prodHours: totalProdHours,
+      devHours: totalDevHours,
+    };
+  };
+
+  const projectCostFn = project => {
+    const monthYear = args.month.split('-');
+    const {
+      hits,
+      storageDays,
+      prodHours,
+      devHours,
+    } = calculateHitsStorageHoursFromProjectEnvironments(project.environments);
+
+    console.table({ hits, storageDays, prodHours, devHours });
+
+    return {
+      id: project.id,
+      name: project.name,
+      availability: project.availability,
+      month: monthYear[1],
+      year: monthYear[0],
+      hits,
+      storageDays,
+      prodHours,
+      devHours,
+      environments: { ...project.environments },
+    };
+  };
 
   const getHighAvailabilityCosts = () => {
     const highAvailabilityProjects = highAvailabilityProjectsInGroup.map(

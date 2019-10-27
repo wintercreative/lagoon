@@ -598,7 +598,7 @@ export const getBillingGroupCost = async (root, args, context) => {
       } else {
         totalDevHours += environments[key].hours.hours;
       }
-      totalStorage += environments[key].storage.bytesUsed;
+      totalStorage += parseInt(environments[key].storage.bytesUsed, 10);
     });
     return {
       hits: totalHits,

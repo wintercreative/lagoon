@@ -567,53 +567,49 @@ export const getBillingGroupCost = async (root, args, context) => {
   const year = monthYear[0];
 
   // BUILD PROJECTS DATA OBJECT
-  // #4
-  const getHitsStorageHours = async dataArgs => {
-    const { openshiftProjectName, id, args, context } = dataArgs;
-    return {
-      hits: await getHits({ openshiftProjectName }, args, context).catch(
-        errorCatcherFn('getHits', { total: 0 }),
-      ),
-      storage: await getStorage({ id }, args, context).catch(
-        errorCatcherFn('getStorage', { bytesUsed: 0 }),
-      ),
-      hours: await getHours({ id }, args, context).catch(
-        errorCatcherFn('getHours', { hours: 0 }),
-      ),
-    };
-  };
 
   // #3
-  const getEnvironmentData = async env => {
-    const { id, name, openshiftProjectName, environmentType } = env;
-    const dataArgs = { openshiftProjectName, id, args, context };
-    const data = await getHitsStorageHours(dataArgs);
-    const type = environmentType;
-    return { id, name, type, ...data };
+  const getEnvironmentData = (month, ctx) => async environment => {
+    const { id, name, openshiftProjectName, environmentType } = environment;
+
+    const hits = await getHits({ openshiftProjectName }, { month }, ctx).catch(
+      errorCatcherFn('getHits', { total: 0 }),
+    );
+
+    const storage = await getStorage({ id }, { month }, ctx).catch(
+      errorCatcherFn('getStorage', { bytesUsed: 0 }),
+    );
+    const hours = await getHours({ id }, { month }, ctx).catch(
+      errorCatcherFn('getHours', { hours: 0 }),
+    );
+
+    return { id, name, type: environmentType, hits, storage, hours };
   };
 
   // #2
   const getProjectEnvironments = async project => {
     const pid = { id: project.id };
-    const args = { includeDeleted: true };
-    const rawEnvs = await getEnvironments(pid, args, context);
-    const environments = await Promise.all(rawEnvs.map(getEnvironmentData));
+    const gArgs = { includeDeleted: true };
+    const rawEnvs = await getEnvironments(pid, gArgs, context);
+    const environments = await Promise.all(
+      rawEnvs.map(getEnvironmentData(args.month, context)),
+    );
     return { ...project, environments };
   };
 
   // #1
-  const projects = await Promise.all(
-    (await getAllProjectsInGroup(root, args, context)).map(
-      getProjectEnvironments,
-    ),
-  );
-
   const getProjectData = project => {
     const { id, availability, environments, name } = project;
     const projectData = calculateProjectMetrics(environments);
     const projectFields = { id, name, availability, month, year };
     return { ...projectFields, ...projectData, environments };
   };
+
+  const projects = (await Promise.all(
+    (await getAllProjectsInGroup(root, args, context)).map(
+      getProjectEnvironments,
+    ),
+  )).map(getProjectData);
 
   const getGroupCosts = (availability, currency, projects) => {
     const billingGroup = { projects, currency };
@@ -629,9 +625,9 @@ export const getBillingGroupCost = async (root, args, context) => {
   };
 
   // Filter out High Availabilty Projects
-  const hProjects = projects.filter(filterBy('HIGH')).map(getProjectData);
+  const hProjects = projects.filter(filterBy('HIGH'));
   // Filter out Standard Availability Projects
-  const sProjects = projects.filter(filterBy('STANDARD')).map(getProjectData);
+  const sProjects = projects.filter(filterBy('STANDARD'));
 
   const high =
     hProjects.length > 0 ? getGroupCosts('high', currency, hProjects) : {};

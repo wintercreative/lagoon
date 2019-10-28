@@ -548,38 +548,42 @@ const calculateProjectMetrics = environments => {
   };
 };
 
-// TODO: TEMPORARY PLACEHOLDER UNTIL WE HAVE OPENSHIFT DATA
-const errorCatcherFn = responseObj => err => ({ ...responseObj });
-
-const getHitsStorageHours = async ({
-  openshiftProjectName,
-  id,
-  args,
-  context,
-}) => ({
-  hits: await getHits({ openshiftProjectName }, args, context).catch(
-    errorCatcherFn({ total: 0 }),
-  ),
-  storage: await getStorage({ id }, args, context).catch(
-    errorCatcherFn({ bytesUsed: 0 }),
-  ),
-  hours: await getHours({ id }, args, context).catch(
-    errorCatcherFn({ hours: 0 }),
-  ),
-});
-
 const filterBy = filterKey => ({ availability }) => availability === filterKey;
+
+// Needed for local Dev - Required if not connected to openshift
+const errorCatcherFn = (msg, responseObj) => err => {
+  console.log(`${msg}: ${err.status} : ${err.message}`);
+  return { ...responseObj };
+};
 
 export const getBillingGroupCost = async (root, args, context) => {
   const { GroupModel } = context.dataSources;
   const { input } = args;
 
-  const group = await GroupModel.loadGroupByIdOrName(input);
+  const { currency } = await GroupModel.loadGroupByIdOrName(input);
 
   const monthYear = args.month.split('-');
   const month = monthYear[1];
   const year = monthYear[0];
 
+  // BUILD PROJECTS DATA OBJECT
+  // #4
+  const getHitsStorageHours = async dataArgs => {
+    const { openshiftProjectName, id, args, context } = dataArgs;
+    return {
+      hits: await getHits({ openshiftProjectName }, args, context).catch(
+        errorCatcherFn('getHits', { total: 0 }),
+      ),
+      storage: await getStorage({ id }, args, context).catch(
+        errorCatcherFn('getStorage', { bytesUsed: 0 }),
+      ),
+      hours: await getHours({ id }, args, context).catch(
+        errorCatcherFn('getHours', { hours: 0 }),
+      ),
+    };
+  };
+
+  // #3
   const getEnvironmentData = async env => {
     const { id, name, openshiftProjectName, environmentType } = env;
     const dataArgs = { openshiftProjectName, id, args, context };
@@ -588,6 +592,7 @@ export const getBillingGroupCost = async (root, args, context) => {
     return { id, name, type, ...data };
   };
 
+  // #2
   const getProjectEnvironments = async project => {
     const pid = { id: project.id };
     const args = { includeDeleted: true };
@@ -596,46 +601,44 @@ export const getBillingGroupCost = async (root, args, context) => {
     return { ...project, environments };
   };
 
+  // #1
   const projects = await Promise.all(
     (await getAllProjectsInGroup(root, args, context)).map(
       getProjectEnvironments,
     ),
   );
 
-  // High Availabilty Projects
-  const hProjects = projects.filter(filterBy('HIGH'));
-  // Standard Availability Projects
-  const sProjects = projects.filter(filterBy('STANDARD'));
-
-  const projectCostFn = project => {
+  const getProjectData = project => {
     const { id, availability, environments, name } = project;
     const projectData = calculateProjectMetrics(environments);
     const projectFields = { id, name, availability, month, year };
     return { ...projectFields, ...projectData, environments };
   };
 
-  const getProjectCosts = projects => {
-    const projectsWithCost = projects.map(projectCostFn);
-    const billingGroup = {
-      projects: projectsWithCost,
-      currency: group.currency,
-    };
+  const getGroupCosts = (availability, currency, projects) => {
+    const billingGroup = { projects, currency };
     const hitCost = getHitsCost(billingGroup);
     const storageCost = getStorageCost(billingGroup);
     const prod = getProdCost(billingGroup);
     const dev = getDevCost(billingGroup);
 
     const environmentCost = { environmentCost: { prod, dev } };
-    return { high: { hitCost, storageCost, environmentCost, projects } };
+    return {
+      [availability]: { hitCost, storageCost, environmentCost, projects },
+    };
   };
 
-  const high = hProjects.length > 0 ? getProjectCosts(hProjects) : {};
-  const standard = sProjects.length > 0 ? getProjectCosts(sProjects) : {};
+  // Filter out High Availabilty Projects
+  const hProjects = projects.filter(filterBy('HIGH')).map(getProjectData);
+  // Filter out Standard Availability Projects
+  const sProjects = projects.filter(filterBy('STANDARD')).map(getProjectData);
 
-  return {
-    currency: group.currency,
-    availability: { ...high, ...standard },
-  };
+  const high =
+    hProjects.length > 0 ? getGroupCosts('high', currency, hProjects) : {};
+  const standard =
+    sProjects.length > 0 ? getGroupCosts('standard', currency, sProjects) : {};
+
+  return { currency: currency, availability: { ...high, ...standard } };
 };
 
 export const removeGroupsFromProject = async (

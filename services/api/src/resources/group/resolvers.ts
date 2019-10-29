@@ -5,14 +5,14 @@ import { isPatchEmpty } from '../../util/db';
 import { GroupNotFoundError } from '../../models/group';
 import * as projectHelpers from '../project/helpers';
 import { OpendistroSecurityOperations } from './opendistroSecurity';
-import {
-  getEnvironmentsByProjectId as getEnvironments,
-  getEnvironmentStorageMonthByEnvironmentId as getStorage,
-  getEnvironmentHoursMonthByEnvironmentId as getHours,
-  getEnvironmentHitsMonthByEnvironmentId as getHits,
-} from '../environment/resolvers';
 
 import { getProjectsCosts as getCosts } from '../billing/billingCalculations';
+import {
+  filterBy,
+  getProjectData,
+  getProjectEnvironments,
+  getYearMonthFromString,
+} from './helpers';
 
 export const getAllGroups = async (
   root,
@@ -518,87 +518,22 @@ export const getAllProjectsInGroup = async (_root, args, context) => {
   return await Promise.all(projectIds.map(getProjectFn));
 };
 
-const calculateProjectEnvironmentsTotalsToBill = environments => {
-  const hits = environments.reduce(
-    (acc, { type, hits: { total } }) =>
-      type !== 'production' ? acc + total : acc + 0,
-    0,
-  );
-
-  const storageDays = environments.reduce(
-    (acc, { storage: { bytesUsed } }) =>
-      bytesUsed === null ? acc + 0 : acc + parseInt(bytesUsed, 10),
-    0,
-  );
-
-  const devHours = environments.reduce(
-    (acc, { type, hours: { hours } }) =>
-      type !== 'production' ? acc + hours : acc + 0,
-    0,
-  );
-
-  const prodHours = environments.reduce(
-    (acc, { type, hours: { hours } }) =>
-      type === 'production' ? acc + hours : acc + 0,
-    0,
-  );
-
-  return {
-    hits,
-    storageDays: storageDays / 1000 / 1000,
-    prodHours,
-    devHours,
-  };
-};
-
-const filterBy = filterKey => ({ availability }) => availability === filterKey;
-
-// Needed for local Dev - Required if not connected to openshift
-const errorCatcherFn = (msg, responseObj) => err => {
-  console.log(`${msg}: ${err.status} : ${err.message}`);
-  return { ...responseObj };
-};
-
-// #1
-const getProjectData = projectWithEnvironmentData => {
-  const { id, availability, environments, name } = projectWithEnvironmentData;
-  const projectData = calculateProjectEnvironmentsTotalsToBill(environments);
-  return { ...{ id, name, availability }, ...projectData, environments };
-};
-
-const getEnvironmentData = (month, ctx) => async environment => {
-  const { id, name, openshiftProjectName, environmentType } = environment;
-
-  const hits = await getHits({ openshiftProjectName }, { month }, ctx).catch(
-    errorCatcherFn('getHits', { total: 0 }),
-  );
-
-  const storage = await getStorage({ id }, { month }, ctx).catch(
-    errorCatcherFn('getStorage', { bytesUsed: 0 }),
-  );
-  const hours = await getHours({ id }, { month }, ctx).catch(
-    errorCatcherFn('getHours', { hours: 0 }),
-  );
-
-  return { id, name, type: environmentType, hits, storage, hours };
-};
-
-const getProjectEnvironments = (month, context) => async project => {
-  const pid = { id: project.id };
-  const gArgs = { includeDeleted: true };
-  const rawEnvs = await getEnvironments(pid, gArgs, context);
-  const environments = await Promise.all(
-    rawEnvs.map(getEnvironmentData(month, context)),
-  );
-  return { ...project, environments };
-};
-
+/**
+ * Given a billingGroup name|id, and month, get the costs for hits, storage,
+ *    and prod/dev environment costs
+ *
+ * @param {obj} root The rootValue passed from the Apollo server configuration.
+ * @param {obj} args {input: GroupInput { id: String, name: String}, month: string}
+ * @param {ExpressContext} context The billing month we want to get data for.
+ *     this includes the context passed from the apolloServer query
+ *     { sqlClient, hasPermissions, keycloakGrant, requestCache }
+ *
+ * @return {JSON} A JSON object that includes the billing costs, projects, and environments
+ */
 export const getBillingGroupCost = async (root, args, context) => {
   const { GroupModel } = context.dataSources;
   const { input, month: yearMonth } = args;
-  const month = yearMonth.split('-')[1];
-  const year = yearMonth.split('-')[0];
-
+  const { year, month } = getYearMonthFromString(yearMonth);
   const { currency } = await GroupModel.loadGroupByIdOrName(input);
 
   const groupProjects = await getAllProjectsInGroup(root, args, context);
@@ -607,9 +542,7 @@ export const getBillingGroupCost = async (root, args, context) => {
     .map(getProjectData)
     .map(project => ({ ...project, month, year }));
 
-  // Filter High Availabilty Projects
   const highAvailabilityProjects = projects.filter(filterBy('HIGH'));
-  // Filter Standard Availability Projects
   const standardAvailabilityProjects = projects.filter(filterBy('STANDARD'));
 
   const availability = {

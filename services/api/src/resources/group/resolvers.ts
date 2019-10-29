@@ -12,12 +12,7 @@ import {
   getEnvironmentHitsMonthByEnvironmentId as getHits,
 } from '../environment/resolvers';
 
-import {
-  hitsCost as getHitsCost,
-  storageCost as getStorageCost,
-  prodCost as getProdCost,
-  devCost as getDevCost,
-} from '../billing/billingCalculations';
+import { getProjectsCosts as getCosts } from '../billing/billingCalculations';
 
 export const getAllGroups = async (
   root,
@@ -523,28 +518,36 @@ export const getAllProjectsInGroup = async (_root, args, context) => {
   return await Promise.all(projectIds.map(getProjectFn));
 };
 
-const calculateProjectMetrics = environments => {
-  let totalHits = 0; // sm of all hits for production environments only
-  let totalStorage = 0; // sum of all storage kilobytes used for a given month
-  let totalDevHours = 0; // sum of all dev hours for development environments only
-  let totalProdHours = 0; // sum of all prod hours only
-  // TODO: REFACTOR THIS!
-  Object.entries(environments).forEach(([key, val]: [string, any]) => {
-    const { type, hits, storage, hours: envHours } = val;
-    const { bytesUsed } = storage;
-    if (type === 'production') {
-      totalHits += hits.total;
-      totalProdHours += envHours.hours;
-    } else {
-      totalDevHours += envHours.hours;
-    }
-    totalStorage += bytesUsed === null ? 0 : parseInt(bytesUsed, 10);
-  });
+const calculateProjectEnvironmentsTotalsToBill = environments => {
+  const hits = environments.reduce(
+    (acc, { type, hits: { total } }) =>
+      type !== 'production' ? acc + total : acc + 0,
+    0,
+  );
+
+  const storageDays = environments.reduce(
+    (acc, { storage: { bytesUsed } }) =>
+      bytesUsed === null ? acc + 0 : acc + parseInt(bytesUsed, 10),
+    0,
+  );
+
+  const devHours = environments.reduce(
+    (acc, { type, hours: { hours } }) =>
+      type !== 'production' ? acc + hours : acc + 0,
+    0,
+  );
+
+  const prodHours = environments.reduce(
+    (acc, { type, hours: { hours } }) =>
+      type === 'production' ? acc + hours : acc + 0,
+    0,
+  );
+
   return {
-    hits: totalHits,
-    storageDays: totalStorage / 1000 / 1000,
-    prodHours: totalProdHours,
-    devHours: totalDevHours,
+    hits,
+    storageDays: storageDays / 1000 / 1000,
+    prodHours,
+    devHours,
   };
 };
 
@@ -556,85 +559,69 @@ const errorCatcherFn = (msg, responseObj) => err => {
   return { ...responseObj };
 };
 
+// #1
+const getProjectData = projectWithEnvironmentData => {
+  const { id, availability, environments, name } = projectWithEnvironmentData;
+  const projectData = calculateProjectEnvironmentsTotalsToBill(environments);
+  return { ...{ id, name, availability }, ...projectData, environments };
+};
+
+const getEnvironmentData = (month, ctx) => async environment => {
+  const { id, name, openshiftProjectName, environmentType } = environment;
+
+  const hits = await getHits({ openshiftProjectName }, { month }, ctx).catch(
+    errorCatcherFn('getHits', { total: 0 }),
+  );
+
+  const storage = await getStorage({ id }, { month }, ctx).catch(
+    errorCatcherFn('getStorage', { bytesUsed: 0 }),
+  );
+  const hours = await getHours({ id }, { month }, ctx).catch(
+    errorCatcherFn('getHours', { hours: 0 }),
+  );
+
+  return { id, name, type: environmentType, hits, storage, hours };
+};
+
+const getProjectEnvironments = (month, context) => async project => {
+  const pid = { id: project.id };
+  const gArgs = { includeDeleted: true };
+  const rawEnvs = await getEnvironments(pid, gArgs, context);
+  const environments = await Promise.all(
+    rawEnvs.map(getEnvironmentData(month, context)),
+  );
+  return { ...project, environments };
+};
+
 export const getBillingGroupCost = async (root, args, context) => {
   const { GroupModel } = context.dataSources;
-  const { input } = args;
+  const { input, month: yearMonth } = args;
+  const month = yearMonth.split('-')[1];
+  const year = yearMonth.split('-')[0];
 
   const { currency } = await GroupModel.loadGroupByIdOrName(input);
 
-  const monthYear = args.month.split('-');
-  const month = monthYear[1];
-  const year = monthYear[0];
+  const groupProjects = await getAllProjectsInGroup(root, args, context);
+  const getProjectEnvsFn = getProjectEnvironments(yearMonth, context);
+  const projects = (await Promise.all(groupProjects.map(getProjectEnvsFn)))
+    .map(getProjectData)
+    .map(project => ({ ...project, month, year }));
 
-  // BUILD PROJECTS DATA OBJECT
+  // Filter High Availabilty Projects
+  const highAvailabilityProjects = projects.filter(filterBy('HIGH'));
+  // Filter Standard Availability Projects
+  const standardAvailabilityProjects = projects.filter(filterBy('STANDARD'));
 
-  // #3
-  const getEnvironmentData = (month, ctx) => async environment => {
-    const { id, name, openshiftProjectName, environmentType } = environment;
-
-    const hits = await getHits({ openshiftProjectName }, { month }, ctx).catch(
-      errorCatcherFn('getHits', { total: 0 }),
-    );
-
-    const storage = await getStorage({ id }, { month }, ctx).catch(
-      errorCatcherFn('getStorage', { bytesUsed: 0 }),
-    );
-    const hours = await getHours({ id }, { month }, ctx).catch(
-      errorCatcherFn('getHours', { hours: 0 }),
-    );
-
-    return { id, name, type: environmentType, hits, storage, hours };
+  const availability = {
+    ...(highAvailabilityProjects.length > 0
+      ? getCosts('high', currency, highAvailabilityProjects)
+      : {}),
+    ...(standardAvailabilityProjects.length > 0
+      ? getCosts('standard', currency, standardAvailabilityProjects)
+      : {}),
   };
 
-  // #2
-  const getProjectEnvironments = async project => {
-    const pid = { id: project.id };
-    const gArgs = { includeDeleted: true };
-    const rawEnvs = await getEnvironments(pid, gArgs, context);
-    const environments = await Promise.all(
-      rawEnvs.map(getEnvironmentData(args.month, context)),
-    );
-    return { ...project, environments };
-  };
-
-  // #1
-  const getProjectData = project => {
-    const { id, availability, environments, name } = project;
-    const projectData = calculateProjectMetrics(environments);
-    const projectFields = { id, name, availability, month, year };
-    return { ...projectFields, ...projectData, environments };
-  };
-
-  const projects = (await Promise.all(
-    (await getAllProjectsInGroup(root, args, context)).map(
-      getProjectEnvironments,
-    ),
-  )).map(getProjectData);
-
-  const getGroupCosts = (availability, currency, projects) => {
-    const billingGroup = { projects, currency };
-    const hitCost = getHitsCost(billingGroup);
-    const storageCost = getStorageCost(billingGroup);
-    const prod = getProdCost(billingGroup);
-    const dev = getDevCost(billingGroup);
-
-    const environmentCost = { environmentCost: { prod, dev } };
-    return {
-      [availability]: { hitCost, storageCost, environmentCost, projects },
-    };
-  };
-
-  // Filter out High Availabilty Projects
-  const hProjects = projects.filter(filterBy('HIGH'));
-  // Filter out Standard Availability Projects
-  const sProjects = projects.filter(filterBy('STANDARD'));
-
-  const high =
-    hProjects.length > 0 ? getGroupCosts('high', currency, hProjects) : {};
-  const standard =
-    sProjects.length > 0 ? getGroupCosts('standard', currency, sProjects) : {};
-
-  return { currency: currency, availability: { ...high, ...standard } };
+  return { currency: currency, availability };
 };
 
 export const removeGroupsFromProject = async (

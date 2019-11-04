@@ -126,6 +126,7 @@ const {
   removeProjectFromBillingGroup,
   getAllProjectsInGroup,
   getBillingGroupCost,
+  getAllBillingGroupsCost,
   getAllProjectsByGroupId,
   updateGroup,
   deleteGroup,
@@ -247,6 +248,7 @@ const resolvers /* : { [string]: ResolversObj | typeof GraphQLDate } */ = {
     allGroups: getAllGroups,
     allProjectsInGroup: getAllProjectsInGroup,
     billingGroupCost: getBillingGroupCost,
+    allBillingGroupsCost: getAllBillingGroupsCost,
   },
   Mutation: {
     addOrUpdateEnvironment,

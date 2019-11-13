@@ -533,11 +533,7 @@ export const getBillingGroupCost = async (root, args, context) => {
 
   await hasPermission('group', 'viewAll');
 
-  return await models.GroupModel.billingGroupCost(
-    groupInput,
-    yearMonth,
-    sqlClient,
-  );
+  return await models.GroupModel.billingGroupCost(groupInput, yearMonth);
 };
 
 /**
@@ -551,7 +547,7 @@ export const getBillingGroupCost = async (root, args, context) => {
  * @return {JSON} A JSON object
  */
 export const getAllBillingGroupsCost = async (root, args, context) => {
-  const { models, hasPermission, sqlClient } = context;
+  const { models, hasPermission } = context;
   const { input: groupInput, month: yearMonth } = args;
 
   if (R.isEmpty(groupInput)) {
@@ -560,7 +556,7 @@ export const getAllBillingGroupsCost = async (root, args, context) => {
 
   await hasPermission('group', 'viewAll');
 
-  return await models.GroupModel.allBillingGroupCosts(yearMonth, sqlClient);
+  return await models.GroupModel.allBillingGroupCosts(yearMonth);
 };
 
 export const removeGroupsFromProject = async (

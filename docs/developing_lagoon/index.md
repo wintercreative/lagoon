@@ -10,7 +10,7 @@ Please check the [official Docs of Docker](https://docs.docker.com/engine/instal
 
 Docker compose is included in Docker for Mac installations.  For linux installations see the directions here: [https://docs.docker.com/compose/install/](https://docs.docker.com/compose/install/).
 
-## Install VirtualBox 
+## Install VirtualBox
 
 We are using VitualBox to run the Openshift Minishift VM. For download and instalation instructions see here:
 [https://www.virtualbox.org/](https://www.virtualbox.org/)
@@ -92,3 +92,6 @@ problem, look at the `/etc/resolv.conf` in your failing pod and check for errant
 To fix, you must remove the extra search domain. Login to the minishift vm (`minishift ssh`) and
 remove the setting from `/etc/resolv.conf`. Restart openshift docker, `sudo docker restart origin`.
 Redeploy `docker-host` in the `lagoon` project.
+
+
+[Instructions for debugging the API with VSCode](./api-debugging.md)

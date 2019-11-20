@@ -5,20 +5,21 @@ import Sql from './sql';
 export const getUserBySshKey = async (
   _root,
   { sshKey },
-  { sqlClient, models, hasPermission },
+  { sqlClient, models, hasPermission }
 ) => {
   await hasPermission('user', 'getBySshKey');
 
   const [keyType, keyValue] = R.compose(
     R.split(' '),
-    R.defaultTo(''),
+    R.defaultTo('')
     // @ts-ignore
   )(sshKey);
 
   const rows = await query(
     sqlClient,
-    Sql.selectUserIdBySshKey({ keyType, keyValue }),
+    Sql.selectUserIdBySshKey({ keyType, keyValue })
   );
+  // @ts-ignore
   const userId = R.map(R.prop('usid'), rows);
 
   const user = await models.UserModel.loadUserById(userId);
@@ -26,11 +27,7 @@ export const getUserBySshKey = async (
   return user;
 };
 
-export const addUser = async (
-  _root,
-  { input },
-  { models, hasPermission },
-) => {
+export const addUser = async (_root, { input }, { models, hasPermission }) => {
   await hasPermission('user', 'add');
 
   const user = await models.UserModel.addUser({
@@ -39,7 +36,7 @@ export const addUser = async (
     firstName: input.firstName,
     lastName: input.lastName,
     comment: input.comment,
-    gitlabId: input.gitlabId,
+    gitlabId: input.gitlabId
   });
 
   return user;
@@ -48,7 +45,7 @@ export const addUser = async (
 export const updateUser = async (
   _root,
   { input: { user: userInput, patch } },
-  { models, hasPermission },
+  { models, hasPermission }
 ) => {
   if (isPatchEmpty({ patch })) {
     throw new Error('Input patch requires at least 1 attribute');
@@ -56,11 +53,11 @@ export const updateUser = async (
 
   const user = await models.UserModel.loadUserByIdOrUsername({
     id: R.prop('id', userInput),
-    username: R.prop('email', userInput),
+    username: R.prop('email', userInput)
   });
 
   await hasPermission('user', 'update', {
-    users: [user.id],
+    users: [user.id]
   });
 
   const updatedUser = await models.UserModel.updateUser({
@@ -70,7 +67,7 @@ export const updateUser = async (
     firstName: patch.firstName,
     lastName: patch.lastName,
     comment: patch.comment,
-    gitlabId: patch.gitlabId,
+    gitlabId: patch.gitlabId
   });
 
   return updatedUser;
@@ -79,15 +76,15 @@ export const updateUser = async (
 export const deleteUser = async (
   _root,
   { input: { user: userInput } },
-  { models, hasPermission },
+  { models, hasPermission }
 ) => {
   const user = await models.UserModel.loadUserByIdOrUsername({
     id: R.prop('id', userInput),
-    username: R.prop('email', userInput),
+    username: R.prop('email', userInput)
   });
 
   await hasPermission('user', 'delete', {
-    users: [user.id],
+    users: [user.id]
   });
 
   await models.UserModel.deleteUser(user.id);
@@ -100,7 +97,7 @@ export const deleteUser = async (
 export const deleteAllUsers = async (
   _root,
   _args,
-  { models, hasPermission },
+  { models, hasPermission }
 ) => {
   await hasPermission('user', 'deleteAll');
 
@@ -109,18 +106,13 @@ export const deleteAllUsers = async (
   let deleteErrors: String[] = [];
   for (const user of users) {
     try {
-      await models.UserModel.deleteUser(user.id)
+      await models.UserModel.deleteUser(user.id);
     } catch (err) {
-      deleteErrors = [
-        ...deleteErrors,
-        `${user.email} (${user.id})`,
-      ]
+      deleteErrors = [...deleteErrors, `${user.email} (${user.id})`];
     }
   }
 
-  return R.ifElse(
-    R.isEmpty,
-    R.always('success'),
-    deleteErrors => { throw new Error(`Could not delete users: ${deleteErrors.join(', ')}`) },
-  )(deleteErrors);
+  return R.ifElse(R.isEmpty, R.always('success'), deleteErrors => {
+    throw new Error(`Could not delete users: ${deleteErrors.join(', ')}`);
+  })(deleteErrors);
 };

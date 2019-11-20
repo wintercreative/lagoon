@@ -1,8 +1,8 @@
-import * as R from 'ramda';
 import { Group } from './group';
-import * as Helpers from '../resources/project/helpers';
 import { getSqlClient, USE_SINGLETON } from '../clients/sqlClient';
 import { getKeycloakAdminClient } from '../clients/keycloak-admin';
+
+const Helpers = require('../resources/project/helpers');
 
 export interface Project {
   id: Number; // int(11) NOT NULL AUTO_INCREMENT,
@@ -37,5 +37,5 @@ export const projectsByGroup = async (group: Group) => {
 };
 
 export default {
-  projectsByGroup,
+  projectsByGroup
 };

@@ -34,7 +34,7 @@ export const projectsDataReducer = (projects: any, objKey: string) =>
 const uniformAvailabilityCheck = (projects: IProjectData[]) => {
   const found = projects.filter(
     (project, index, self) =>
-      self.findIndex(p => p.availability !== project.availability) !== -1,
+      self.findIndex(p => p.availability !== project.availability) !== -1
   );
   if (found.length !== 0) {
     throw 'Projects must have the same availability';
@@ -46,32 +46,32 @@ export const calculateProjectEnvironmentsTotalsToBill = environments => {
   const hits = environments.reduce(
     (acc, { type, hits: { total } }) =>
       type === 'production' ? acc + total : acc + 0,
-    0,
+    0
   );
 
   const storageDays = environments.reduce(
     (acc, { storage: { bytesUsed } }) =>
       bytesUsed === null ? acc + 0 : acc + parseInt(bytesUsed, 10),
-    0,
+    0
   );
 
   const devHours = environments.reduce(
     (acc, { type, hours: { hours } }) =>
       type !== 'production' ? acc + hours : acc + 0,
-    0,
+    0
   );
 
   const prodHours = environments.reduce(
     (acc, { type, hours: { hours } }) =>
       type === 'production' ? acc + hours : acc + 0,
-    0,
+    0
   );
 
   return {
     hits,
     storageDays: storageDays / 1000 / 1000,
     prodHours,
-    devHours,
+    devHours
   };
 };
 
@@ -89,7 +89,7 @@ export const getProjectsCosts = (currency, projects) => {
     storageCost: storage,
     environmentCost,
     total,
-    projects,
+    projects
   };
 };
 
@@ -149,7 +149,7 @@ export const prodCost = ({ currency, projects }: IBillingGroup) => {
     currency
   ];
 
-  const projectProdCosts = [];
+  const projectProdCosts: number[] = [];
   projects.map(project => {
     const { prodHours, availability } = project;
     const { prodSitePerHour } = currencyPricingAvailability[availability];
@@ -198,7 +198,7 @@ const calculateHitBaseTiers = (hitBase, hitCosts) => {
       (
         (previousHitTier.max + 1 - previousHitTier.min) * hitCosts[i - 1] +
         hitBaseTiers[i - 1]
-      ).toFixed(2),
+      ).toFixed(2)
     );
     hitBaseTiers.push(hitBase);
   }

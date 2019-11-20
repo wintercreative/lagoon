@@ -1,4 +1,4 @@
-import * as moment from 'moment';
+import moment from 'moment';
 
 import { getSqlClient, USE_SINGLETON } from '../clients/sqlClient';
 import * as esClient from '../clients/esClient';
@@ -34,7 +34,7 @@ interface EnvironmentData {
 
 type projectEnvWithDataType = (
   pid: string,
-  month: string,
+  month: string
 ) => Promise<EnvironmentData[]>;
 
 const sqlClient = getSqlClient(USE_SINGLETON);
@@ -51,7 +51,7 @@ const sqlClient = getSqlClient(USE_SINGLETON);
 export const projectEnvironments = async (
   pid,
   type,
-  includeDeleted = false,
+  includeDeleted = false
 ) => {
   const prep = prepare(
     sqlClient,
@@ -59,12 +59,12 @@ export const projectEnvironments = async (
       FROM environment e
       WHERE e.project = :pid
       ${includeDeleted ? '' : 'AND deleted = "0000-00-00 00:00:00"'}
-      ${type ? 'AND e.environment_type = :type' : ''}`,
+      ${type ? 'AND e.environment_type = :type' : ''}`
   );
 
   const environments: [Environment] = await query(
     sqlClient,
-    prep({ pid, includeDeleted, type }),
+    prep({ pid, includeDeleted, type })
   );
   return environments;
 };
@@ -90,19 +90,19 @@ export const errorCatcherFn = (msg, responseObj) => err => {
 export const environmentData = async (
   eid: number,
   month: string,
-  openshiftProjectName: string,
+  openshiftProjectName: string
 ) => {
   const hits = await environmentHitsMonthByEnvironmentId(
     openshiftProjectName,
-    month,
+    month
   ).catch(errorCatcherFn('getHits', { total: 0 }));
 
   const storage = await environmentStorageMonthByEnvironmentId(
     eid,
-    month,
+    month
   ).catch(errorCatcherFn('getStorage', { bytesUsed: 0 }));
   const hours = await environmentHoursMonthByEnvironmentId(eid, month).catch(
-    errorCatcherFn('getHours', { hours: 0 }),
+    errorCatcherFn('getHours', { hours: 0 })
   );
 
   return { hits, storage, hours };
@@ -118,34 +118,42 @@ export const environmentData = async (
  */
 export const projectEnvironmentsWithData: projectEnvWithDataType = async (
   pid,
-  month,
+  month
 ) => {
   const environments = await projectEnvironments(pid, null, true);
 
   const environmentDataFn = async ({
     id: eid,
     environmentType: type,
-    openshiftProjectName: openshift,
+    openshiftProjectName: openshift
   }: Environment) => ({
     eid,
     type,
     data: {
-      ...(await environmentData(eid, month, openshift)),
-    },
+      ...(await environmentData(eid as number, month, openshift as string))
+    }
   });
   const data = await Promise.all(environments.map(environmentDataFn));
 
   const environmentDataReducerFn = (obj, item) => ({
     ...obj,
-    [item.eid]: { ...item.data },
+    [item.eid]: { ...item.data }
   });
   const keyedData = data.reduce(environmentDataReducerFn, {});
 
-  const environmentsMapFn = ({ id, name, environmentType: type }) => ({
+  const environmentsMapFn = ({
+    id,
+    name,
+    environmentType: type
+  }: {
+    id?: any;
+    name?: any;
+    environmentType?: any;
+  }) => ({
     id,
     name,
     type,
-    ...keyedData[id],
+    ...keyedData[id]
   });
   return environments.map(environmentsMapFn);
 };
@@ -169,7 +177,7 @@ export const environmentStorageMonthByEnvironmentId = async (eid, month) => {
 
 export const environmentHoursMonthByEnvironmentId = async (
   eid: number,
-  yearMonth: string,
+  yearMonth: string
 ) => {
   const str =
     'SELECT e.created, e.deleted FROM environment e WHERE e.id = :eid';
@@ -252,7 +260,7 @@ export const environmentHoursMonthByEnvironmentId = async (
 
 export const environmentHitsMonthByEnvironmentId = async (
   openshiftProjectName,
-  yearMonth,
+  yearMonth
 ) => {
   const interested_date = yearMonth ? new Date(yearMonth) : new Date();
   const year = interested_date.getFullYear();
@@ -271,27 +279,27 @@ export const environmentHitsMonthByEnvironmentId = async (
                   '@timestamp': {
                     gte: `${interested_year_month}||/M`,
                     lte: `${interested_year_month}||/M`,
-                    format: 'strict_year_month',
-                  },
-                },
-              },
+                    format: 'strict_year_month'
+                  }
+                }
+              }
             ],
             must_not: [
               {
                 match_phrase: {
                   request_header_useragent: {
-                    query: 'StatusCake',
-                  },
-                },
-              },
-            ],
-          },
-        },
-      },
+                    query: 'StatusCake'
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
     });
 
     const response = {
-      total: result.count,
+      total: result.count
     };
     return response;
   } catch (e) {
@@ -312,5 +320,5 @@ export default {
   environmentData,
   environmentStorageMonthByEnvironmentId,
   environmentHoursMonthByEnvironmentId,
-  environmentHitsMonthByEnvironmentId,
+  environmentHitsMonthByEnvironmentId
 };

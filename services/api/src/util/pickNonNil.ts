@@ -4,11 +4,13 @@ import * as R from 'ramda';
 // long as they are non-nil.
 const pickNonNil = (
   names: ReadonlyArray<any>,
-  obj: { [propName: string]: any },
-): Object =>
-  R.pipe(
+  obj: { [propName: string]: any }
+): Object => {
+  return R.pipe<{}, {}>(
+    // @ts-ignore
     R.pick(names),
-    R.pickBy(R.complement(R.isNil)),
+    R.pickBy(R.complement(R.isNil))
   )(obj);
+};
 
 export default R.curry(pickNonNil);

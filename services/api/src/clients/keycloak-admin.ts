@@ -2,20 +2,20 @@ import axios from 'axios';
 import * as logger from '../logger';
 const KeycloakAdmin = require('keycloak-admin').default;
 const { Agent: KeycloakAgent } = require('keycloak-admin/lib/resources/agent');
-const { ConnectionConfig, Credentials, keycloakGrantManager } = require('./keycloakClient');
+const { ConnectionConfig, Credentials } = require('./keycloakClient');
 
 /**
  * Everytime an API request is made, check if the access_token is (or will soon
  * be) expired. If so, get a new token before making the request.
  */
 class RetryAgent extends KeycloakAgent {
-  constructor(args) {
+  constructor(args: any) {
     super(args);
   }
 
-  request(args) {
+  request(args: any) {
     const parentRequest = super.request(args);
-    return async payload => {
+    return async (payload: any) => {
       const accessToken = this.client.getAccessToken();
       const tokenRaw = Buffer.from(accessToken.split('.')[1], 'base64');
       const token = JSON.parse(tokenRaw.toString());
@@ -28,7 +28,7 @@ class RetryAgent extends KeycloakAgent {
       }
 
       return parentRequest(payload);
-    }
+    };
   }
 }
 
@@ -36,13 +36,13 @@ class RetryAgent extends KeycloakAgent {
  * Use our custom RetryAgent and save credentials internally for re-auth tasks.
  */
 export class RetryKeycloakAdmin extends KeycloakAdmin {
-  constructor(connectionConfig, credentials) {
+  constructor(connectionConfig: any, credentials: any) {
     const agent = new RetryAgent({
-      getUrlParams: (client) => ({
-        realm: client.realmName,
+      getUrlParams: (client: any) => ({
+        realm: client.realmName
       }),
-      getBaseUrl: (client) => client.baseUrl,
-      axios,
+      getBaseUrl: (client: any) => client.baseUrl,
+      axios
     });
 
     super(connectionConfig, agent);
@@ -59,8 +59,11 @@ export class RetryKeycloakAdmin extends KeycloakAdmin {
 }
 
 export const getKeycloakAdminClient = async () => {
-  const keycloakAdminClient = new RetryKeycloakAdmin(ConnectionConfig, Credentials);
+  const keycloakAdminClient = new RetryKeycloakAdmin(
+    ConnectionConfig,
+    Credentials
+  );
   await keycloakAdminClient.auth();
 
   return keycloakAdminClient;
-}
+};

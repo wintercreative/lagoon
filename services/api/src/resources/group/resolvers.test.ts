@@ -23,7 +23,7 @@ import {
   ALL_GROUPS,
   ALL_PROJECTS_IN_GROUP,
   DELETE_PROJECT,
-  BILLING_GROUP_COST,
+  BILLING_GROUP_COST
 } from './gql.test';
 
 const exec = promisify(require('child_process').exec);
@@ -54,13 +54,13 @@ const defaultProject: Project = {
   gitUrl: 'http://github.com',
   openshift: 1,
   productionEnvironment: 'master',
-  availability: 'STANDARD',
+  availability: 'STANDARD'
 };
 
 const defaultBillingGroup: Group = {
   name: 'PLACEHOLDER',
   currency: 'USD',
-  billingSoftware: 'Bexio',
+  billingSoftware: 'Bexio'
 };
 
 const requestConfig = {
@@ -68,14 +68,14 @@ const requestConfig = {
   timeout: 60000,
   headers: {
     Authorization: '',
-    'content-type': 'application/json',
-  },
+    'content-type': 'application/json'
+  }
 };
 
 const getJWTToken = async () => {
   try {
     const { stdout: jwtToken, stderr } = await exec(
-      'docker-compose exec -T auto-idler /create_jwt.sh',
+      'docker-compose exec -T auto-idler /create_jwt.sh'
     );
     if (stderr) {
       throw stderr;
@@ -112,7 +112,7 @@ type AxiosGraphQL = (query: String, variables?: any) => AxiosResponseGraphQL;
 const graphql: AxiosGraphQL = (query: String, variables?: any) =>
   axiosInstance.post('/graphql', {
     query,
-    ...(variables ? { variables } : {}),
+    ...(variables ? { variables } : {})
   });
 
 const addProject = (project: Project) =>
@@ -126,7 +126,7 @@ const addBillingGroup = (group: Group) =>
 
 const updateBillingGroup = (group: Group, patch: Group) =>
   graphql(UPDATE_BILLING_GROUP, {
-    input: { group: { ...group }, patch: { ...patch } },
+    input: { group: { ...group }, patch: { ...patch } }
   });
 
 const deleteGroup = (group: Group) =>
@@ -134,28 +134,28 @@ const deleteGroup = (group: Group) =>
 
 const addProjectToBillingGroup = (project: Project, group: Group) =>
   graphql(ADD_PROJECT_TO_BILLING_GROUP, {
-    input: { project: { ...project }, group: { ...group } },
+    input: { project: { ...project }, group: { ...group } }
   });
 
 const updateProjectBillingGroup = (project: Project, group: Group) =>
   graphql(UPDATE_PROJECT_BILLING_GROUP, {
-    input: { project: { ...project }, group: { ...group } },
+    input: { project: { ...project }, group: { ...group } }
   });
 
 const removeProjectFromBillingGroup = (group: Group, project: Project) =>
   graphql(REMOVE_PROJECT_FROM_BILLING_GROUP, {
-    input: { group: { ...group }, project: { ...project } },
+    input: { group: { ...group }, project: { ...project } }
   });
 
 const allProjects = (
-  createdAfter: String = null,
-  gitUrl: String = null,
-  order: String = null,
+  createdAfter: String | null = null,
+  gitUrl: String | null = null,
+  order: String | null = null
 ) => graphql(ALL_PROJECTS, { createdAfter, gitUrl, order });
 
 const projectByName = (name: String = '') => graphql(PROJECT_BY_NAME, { name });
 
-const allGroups = (type: String = null) => graphql(ALL_GROUPS, { type });
+const allGroups = (type: String | null = null) => graphql(ALL_GROUPS, { type });
 
 const allProjectsInGroup = (group: Group) =>
   graphql(ALL_PROJECTS_IN_GROUP, { input: { ...group } });
@@ -166,9 +166,12 @@ const deleteProject = (name: String) =>
 const billingGroupCost = (group: Group, month: String) =>
   graphql(BILLING_GROUP_COST, { input: { ...group }, month });
 
-const cleanup = {
+const cleanup: {
+  groups: Group[];
+  projects: Project[];
+} = {
   groups: [],
-  projects: [],
+  projects: []
 };
 
 // Unit Under Test
@@ -182,7 +185,7 @@ describe('Billing Group Costs Related Queries & Mutation', () => {
 
   afterEach(async () => {
     for (var i = cleanup.projects.length - 1; i >= 0; i--) {
-      await deleteProject(cleanup.projects[i].name);
+      await deleteProject(cleanup.projects[i].name as string);
       cleanup.groups.splice(i, 1);
     }
 
@@ -210,9 +213,9 @@ describe('Billing Group Costs Related Queries & Mutation', () => {
       const expected = {
         data: {
           addBillingGroup: {
-            name: group.name,
-          },
-        },
+            name: group.name
+          }
+        }
       };
       expect(data).toMatchObject(expected);
 
@@ -228,7 +231,7 @@ describe('Billing Group Costs Related Queries & Mutation', () => {
       const patch = {
         name: fakeName(10),
         currency: 'AUD',
-        billingSoftware: 'Bexio',
+        billingSoftware: 'Bexio'
       };
 
       // Act
@@ -245,9 +248,9 @@ describe('Billing Group Costs Related Queries & Mutation', () => {
             name: patch.name,
             type: 'billing',
             currency: 'AUD',
-            billingSoftware: 'Bexio',
-          },
-        },
+            billingSoftware: 'Bexio'
+          }
+        }
       };
       expect(data).toMatchObject(expected);
 
@@ -270,8 +273,8 @@ describe('Billing Group Costs Related Queries & Mutation', () => {
       // Assert
       const expected = {
         data: {
-          deleteGroup: 'success',
-        },
+          deleteGroup: 'success'
+        }
       };
       expect(data).toMatchObject(expected);
     }, 60000);
@@ -292,9 +295,9 @@ describe('Billing Group Costs Related Queries & Mutation', () => {
         data: {
           addProject: {
             name: project.name,
-            availability: 'STANDARD',
-          },
-        },
+            availability: 'STANDARD'
+          }
+        }
       };
       expect(data).toMatchObject(expected);
 
@@ -308,9 +311,12 @@ describe('Billing Group Costs Related Queries & Mutation', () => {
       const { data: addProjectData } = await addProject(project);
 
       // Act
-      const { data } = await updateProject(addProjectData.data.addProject.id, {
-        availability: 'HIGH',
-      });
+      const { data } = await updateProject(
+        addProjectData.data.addProject.id as number,
+        {
+          availability: 'HIGH'
+        }
+      );
 
       if (!data.data.updateProject) {
         throw new Error(data.errors[0].message);
@@ -321,9 +327,9 @@ describe('Billing Group Costs Related Queries & Mutation', () => {
         data: {
           updateProject: {
             name: project.name,
-            availability: 'HIGH',
-          },
-        },
+            availability: 'HIGH'
+          }
+        }
       };
       expect(data).toMatchObject(expected);
 
@@ -351,14 +357,14 @@ describe('Billing Group Costs Related Queries & Mutation', () => {
         data: {
           addProjectToBillingGroup: {
             name: project.name,
-            groups: [{ name: `project-${project.name}` }, { name: group.name }],
-          },
-        },
+            groups: [{ name: `project-${project.name}` }, { name: group.name }]
+          }
+        }
       };
 
       // Sort the resulting group array otherwise the array order can throw off the test
-      const nameSortFn = (a, b) => (a.name > b.name ? 1 : -1);
-      data.data.addProjectToBillingGroup.groups.sort(nameSortFn);
+      const nameSortFn = (a: any, b: any) => (a.name > b.name ? 1 : -1);
+      data.data.addProjectToBillingGroup.groups!.sort(nameSortFn);
       expected.data.addProjectToBillingGroup.groups.sort(nameSortFn);
 
       expect(data).toMatchObject(expected);
@@ -412,7 +418,7 @@ describe('Billing Group Costs Related Queries & Mutation', () => {
       }
 
       // Assert
-      expect(data.data.removeProjectFromBillingGroup.groups.length).toBe(1);
+      expect(data.data.removeProjectFromBillingGroup.groups!.length).toBe(1);
 
       // cleanup
       cleanup.groups.push(group);
@@ -427,7 +433,7 @@ describe('Billing Group Costs Related Queries & Mutation', () => {
       // Arrange
       const project: Project = {
         name: fakeName(10),
-        gitUrl: `http://github.com/amazeeio/${fakeName(5)}`,
+        gitUrl: `http://github.com/amazeeio/${fakeName(5)}`
       };
       await addProject(project);
 
@@ -450,9 +456,9 @@ describe('Billing Group Costs Related Queries & Mutation', () => {
       const expected = {
         data: {
           projectByName: {
-            name: 'high-cotton',
-          },
-        },
+            name: 'high-cotton'
+          }
+        }
       };
       expect(data).toMatchObject(expected);
     }, 60000);
@@ -463,14 +469,14 @@ describe('Billing Group Costs Related Queries & Mutation', () => {
       const { data } = await allGroups('billing');
 
       const group = await data.data.allGroups.find(
-        group => group.name === 'High Cotton Billing Group',
+        group => group.name === 'High Cotton Billing Group'
       );
 
       // Assert
       const expected = {
         name: 'High Cotton Billing Group',
         type: 'billing',
-        currency: 'USD',
+        currency: 'USD'
       };
       expect(group).toEqual(expected);
     }, 60000);
@@ -487,10 +493,10 @@ describe('Billing Group Costs Related Queries & Mutation', () => {
         data: {
           allProjectsInGroup: [
             {
-              name: 'high-cotton',
-            },
-          ],
-        },
+              name: 'high-cotton'
+            }
+          ]
+        }
       };
       expect(data).toMatchObject(expected);
     });
@@ -514,8 +520,8 @@ describe('Billing Group Costs Related Queries & Mutation', () => {
                 environmentCost: {
                   environmentCost: {
                     prod: 0,
-                    dev: 0,
-                  },
+                    dev: 0
+                  }
                 },
                 projects: [
                   {
@@ -532,74 +538,74 @@ describe('Billing Group Costs Related Queries & Mutation', () => {
                         name: 'Master',
                         type: 'production',
                         hits: {
-                          total: 0,
+                          total: 0
                         },
                         storage: {
                           bytesUsed: null,
-                          month: null,
+                          month: null
                         },
                         hours: {
                           month: '2019-08',
-                          hours: 0,
-                        },
+                          hours: 0
+                        }
                       },
                       {
                         id: '4',
                         name: 'Staging',
                         type: 'development',
                         hits: {
-                          total: 0,
+                          total: 0
                         },
                         storage: {
                           bytesUsed: null,
-                          month: null,
+                          month: null
                         },
                         hours: {
                           month: '2019-08',
-                          hours: 0,
-                        },
+                          hours: 0
+                        }
                       },
                       {
                         id: '5',
                         name: 'Development',
                         type: 'development',
                         hits: {
-                          total: 0,
+                          total: 0
                         },
                         storage: {
                           bytesUsed: null,
-                          month: null,
+                          month: null
                         },
                         hours: {
                           month: '2019-08',
-                          hours: 0,
-                        },
+                          hours: 0
+                        }
                       },
                       {
                         id: '6',
                         name: 'PR-175',
                         type: 'development',
                         hits: {
-                          total: 0,
+                          total: 0
                         },
                         storage: {
                           bytesUsed: null,
-                          month: null,
+                          month: null
                         },
                         hours: {
                           month: '2019-08',
-                          hours: 0,
-                        },
-                      },
+                          hours: 0
+                        }
+                      }
                     ],
                     month: '08',
-                    year: '2019',
-                  },
-                ],
-              },
-            },
-          },
-        },
+                    year: '2019'
+                  }
+                ]
+              }
+            }
+          }
+        }
       };
       expect(data).toMatchObject(expected);
     });

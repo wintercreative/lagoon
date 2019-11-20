@@ -4,7 +4,7 @@ export const HIT_TIERS = [
   { min: 0, max: 300_000 },
   { min: 300_001, max: 2_500_000 },
   { min: 2_500_001, max: 10_000_000 },
-  { min: 10_000_001, max: 99_999_999_999 },
+  { min: 10_000_001, max: 99_999_999_999 }
 ];
 
 export const CURRENCIES = {
@@ -13,12 +13,12 @@ export const CURRENCIES = {
   EUR: 'EUR',
   GBP: 'GBP',
   ZAR: 'ZAR',
-  AUD: 'AUD',
+  AUD: 'AUD'
 };
 
 export const AVAILABILITY = {
   STANDARD: 'STANDARD',
-  HIGH: 'HIGH',
+  HIGH: 'HIGH'
 };
 
 export const USD = {
@@ -28,15 +28,15 @@ export const USD = {
       hitCosts: [0.0, 0.00015, 0.00007, 0.00003],
       hitBase: 69.0,
       prodSitePerHour: 0.0417,
-      devSitePerHour: 0.0139,
+      devSitePerHour: 0.0139
     },
     HIGH: {
       hitCosts: [0.0, 0.0003, 0.00014, 0.00006],
       hitBase: 200.0,
       prodSitePerHour: 0.1389,
-      devSitePerHour: 0.0417,
-    },
-  },
+      devSitePerHour: 0.0417
+    }
+  }
 };
 
 export const CHF = {
@@ -46,15 +46,15 @@ export const CHF = {
       hitCosts: [0.0, 0.00015, 0.00007, 0.00003],
       hitBase: 69.0,
       prodSitePerHour: 0.0417,
-      devSitePerHour: 0.0139,
+      devSitePerHour: 0.0139
     },
     HIGH: {
       hitCosts: [0.0, 0.0003, 0.00014, 0.00006],
       hitBase: 200.0,
       prodSitePerHour: 0.1389,
-      devSitePerHour: 0.0417,
-    },
-  },
+      devSitePerHour: 0.0417
+    }
+  }
 };
 
 export const EUR = {
@@ -64,15 +64,15 @@ export const EUR = {
       hitCosts: [0.0, 0.00015, 0.00007, 0.00003],
       hitBase: 69.0,
       prodSitePerHour: 0.0417,
-      devSitePerHour: 0.0139,
+      devSitePerHour: 0.0139
     },
     HIGH: {
       hitCosts: [0.0, 0.0003, 0.00014, 0.00006],
       hitBase: 200.0,
       prodSitePerHour: 0.1389,
-      devSitePerHour: 0.0417,
-    },
-  },
+      devSitePerHour: 0.0417
+    }
+  }
 };
 
 export const GBP = {
@@ -82,15 +82,15 @@ export const GBP = {
       hitCosts: [0.0, 0.00012, 0.000056, 0.000024],
       hitBase: 55.0,
       prodSitePerHour: 0.0347,
-      devSitePerHour: 0.0116,
+      devSitePerHour: 0.0116
     },
     HIGH: {
       hitCosts: [0.0, 0.0003, 0.00014, 0.00006],
       hitBase: 80.0,
       prodSitePerHour: 0.1111,
-      devSitePerHour: 0.0347,
-    },
-  },
+      devSitePerHour: 0.0347
+    }
+  }
 };
 
 export const ZAR = {
@@ -100,9 +100,9 @@ export const ZAR = {
       hitCosts: [0, 0.0015, 0.0007, 0.0003],
       hitBase: 280,
       prodSitePerHour: undefined,
-      devSitePerHour: undefined,
-    },
-  },
+      devSitePerHour: undefined
+    }
+  }
 };
 
 export const AUD = {
@@ -112,29 +112,29 @@ export const AUD = {
       hitCosts: [0.0, 0.00027, 0.00018, 0.00012],
       hitBase: 125.0,
       prodSitePerHour: 0.075,
-      devSitePerHour: 0.025,
+      devSitePerHour: 0.025
     },
     HIGH: {
       hitCosts: [0.0, 0.00054, 0.00036, 0.00024],
       hitBase: 360.0,
       prodSitePerHour: 0.25,
-      devSitePerHour: 0.075,
-    },
-  },
+      devSitePerHour: 0.075
+    }
+  }
 };
 
-export const CURRENCY_PRICING = {
+export const CURRENCY_PRICING: { [x: string]: any } = {
   USD,
   CHF,
   EUR,
   GBP,
   ZAR,
-  AUD,
+  AUD
 };
 
 export default {
   HIT_TIERS,
   CURRENCIES,
   AVAILABILITY,
-  CURRENCY_PRICING,
+  CURRENCY_PRICING
 };

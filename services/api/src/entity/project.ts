@@ -1,28 +1,40 @@
-import { Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  Index,
+  PrimaryGeneratedColumn,
+  BaseEntity
+} from 'typeorm';
+import { ObjectType, Field, ID, Root, Int } from 'type-graphql';
 
+@ObjectType()
 @Entity('project', { schema: 'infrastructure' })
 @Index('name', ['name'], { unique: true })
-export class project {
+export class Project extends BaseEntity {
+  @Field(() => ID)
   @PrimaryGeneratedColumn({
     type: 'int',
     name: 'id'
   })
   id: number;
 
+  @Field(() => String)
   @Column('varchar', {
     nullable: true,
     unique: true,
     length: 100,
     name: 'name'
   })
-  name: string | null;
+  name: string;
 
+  @Field(() => Int)
   @Column('int', {
     nullable: true,
     name: 'customer'
   })
   customer: number | null;
 
+  @Field(() => String)
   @Column('varchar', {
     nullable: true,
     length: 300,
@@ -30,6 +42,7 @@ export class project {
   })
   git_url: string | null;
 
+  @Field(() => String)
   @Column('varchar', {
     nullable: true,
     length: 50,
@@ -37,6 +50,7 @@ export class project {
   })
   availability: string | null;
 
+  @Field(() => String)
   @Column('varchar', {
     nullable: true,
     length: 300,
@@ -44,6 +58,7 @@ export class project {
   })
   subfolder: string | null;
 
+  @Field(() => String)
   @Column('varchar', {
     nullable: true,
     length: 300,
@@ -51,6 +66,7 @@ export class project {
   })
   active_systems_deploy: string | null;
 
+  @Field(() => String)
   @Column('varchar', {
     nullable: true,
     length: 300,
@@ -58,6 +74,7 @@ export class project {
   })
   active_systems_promote: string | null;
 
+  @Field(() => String)
   @Column('varchar', {
     nullable: true,
     length: 300,
@@ -65,6 +82,7 @@ export class project {
   })
   active_systems_remove: string | null;
 
+  @Field(() => String)
   @Column('varchar', {
     nullable: true,
     length: 300,
@@ -72,6 +90,7 @@ export class project {
   })
   active_systems_task: string | null;
 
+  @Field(() => String)
   @Column('varchar', {
     nullable: true,
     length: 300,
@@ -79,6 +98,7 @@ export class project {
   })
   branches: string | null;
 
+  @Field(() => String)
   @Column('varchar', {
     nullable: true,
     length: 300,
@@ -86,6 +106,7 @@ export class project {
   })
   pullrequests: string | null;
 
+  @Field(() => String)
   @Column('varchar', {
     nullable: true,
     length: 100,
@@ -93,6 +114,7 @@ export class project {
   })
   production_environment: string | null;
 
+  @Field(() => Int)
   @Column('int', {
     nullable: false,
     default: () => "'1'",
@@ -100,6 +122,7 @@ export class project {
   })
   auto_idle: number;
 
+  @Field(() => Int)
   @Column('int', {
     nullable: false,
     default: () => "'1'",
@@ -107,12 +130,14 @@ export class project {
   })
   storage_calc: number;
 
+  @Field(() => Int)
   @Column('int', {
     nullable: true,
     name: 'openshift'
   })
   openshift: number | null;
 
+  @Field(() => String)
   @Column('varchar', {
     nullable: true,
     length: 300,
@@ -120,12 +145,14 @@ export class project {
   })
   openshift_project_pattern: string | null;
 
+  @Field(() => Int)
   @Column('int', {
     nullable: true,
     name: 'development_environments_limit'
   })
   development_environments_limit: number | null;
 
+  @Field()
   @Column('timestamp', {
     nullable: false,
     default: () => 'CURRENT_TIMESTAMP',
@@ -133,6 +160,7 @@ export class project {
   })
   created: Date;
 
+  @Field(() => String)
   @Column('varchar', {
     nullable: true,
     length: 5000,

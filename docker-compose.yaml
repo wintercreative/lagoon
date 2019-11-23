@@ -164,6 +164,7 @@ services:
     command: yarn run dev
     volumes:
       - ./services/api/src:/app/services/api/src
+      - ./services/api/dist:/app/services/api/dist
       - ./node-packages:/app/node-packages:delegated
     depends_on:
       - api-db
@@ -171,6 +172,7 @@ services:
       - keycloak
     ports:
       - '3000:3000'
+      - '9229:9229'
     labels:
       lagoon.type: custom
       lagoon.template: services/api/.lagoon.app.yml
